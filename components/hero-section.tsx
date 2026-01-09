@@ -38,7 +38,7 @@ export function HeroSection() {
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <LinkIcon className="h-4 w-4" />
-                  YouTube URL
+                  YouTube 链接
                 </label>
                 <Input
                   type="url"
@@ -81,7 +81,7 @@ export function HeroSection() {
 
           {/* Trust Indicators */}
           <p className="text-sm text-muted-foreground">
-            ✓ No credit card required for free tier • ✓ 2 minutes average processing time
+            无需绑卡；多数视频处理时间在 2 分钟内
           </p>
         </div>
       </div>

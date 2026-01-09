@@ -5,18 +5,18 @@ export function HowItWorksSection() {
   const steps = [
     {
       icon: Upload,
-      title: "Upload or Paste",
-      description: "Add your YouTube link, X video URL, or upload a video/audio file directly",
+      title: "粘贴 YouTube 链接",
+      description: "仅支持 YouTube URL 输入，快速开始生成",
     },
     {
       icon: Sparkles,
-      title: "AI Generates Content",
-      description: "Our AI analyzes your video and creates threads, tweets, SEO metadata, and highlight suggestions",
+      title: "AI 生成内容资产",
+      description: "生成 X Thread、单条推文和 YouTube SEO 元数据",
     },
     {
       icon: Share2,
-      title: "Copy & Publish",
-      description: "Copy the content with one click or export everything. Share across all your platforms instantly",
+      title: "复制与导出",
+      description: "一键复制或导出 JSON/Markdown，直接发布",
     },
   ]
 
@@ -25,9 +25,9 @@ export function HowItWorksSection() {
       <div className="container">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold">How It Works</h2>
+            <h2 className="text-3xl md:text-5xl font-bold">如何工作</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Three simple steps to transform your videos into social media gold
+              三步把长视频转成可发布内容
             </p>
           </div>
 

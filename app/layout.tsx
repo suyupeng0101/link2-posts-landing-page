@@ -8,9 +8,9 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Link2Posts - Turn YouTube & Live Replays into Social Content",
+  title: "Link2Posts - YouTube 链接转内容资产",
   description:
-    "Convert your YouTube videos and live streams into ready-to-publish X threads, tweets, SEO metadata, and highlight clips in minutes.",
+    "把 YouTube 链接一键生成 X Thread、单条推文与 YouTube SEO 元数据。",
   generator: "v0.app",
   icons: {
     icon: [
@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh">
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />

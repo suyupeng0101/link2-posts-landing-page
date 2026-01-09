@@ -19,30 +19,24 @@ export function Header() {
             href="#features"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Features
-          </Link>
-          <Link
-            href="#pricing"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Pricing
+            功能
           </Link>
           <Link
             href="#faq"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            FAQ
+            常见问题
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
           <Link href="/login">
             <Button variant="ghost" size="sm">
-              Log in
+              登录
             </Button>
           </Link>
           <Link href="#hero">
-            <Button size="sm">Get Started</Button>
+            <Button size="sm">立即开始</Button>
           </Link>
         </div>
       </div>

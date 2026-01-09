@@ -1,48 +1,37 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Clock, Zap, Link2, Copy, CreditCard, Share2, FileText, Video } from "lucide-react"
+import { Clock, Link2, Copy, Share2, FileText, SlidersHorizontal } from "lucide-react"
 
 export function FeaturesSection() {
   const features = [
     {
       icon: Clock,
-      title: "Timestamp-Based Outputs",
-      description: "Every highlight clip comes with exact timestamps, making it easy to create short-form content",
+      title: "基于时间戳的结构化输出",
+      description: "章节与内容引用可追溯，减少胡编风险",
     },
     {
       icon: Copy,
-      title: "Copy-Ready Assets",
-      description: "All content is formatted and ready to publish. Just copy and paste—no editing required",
+      title: "可直接发布",
+      description: "Thread 与单条推文格式化输出，一键复制即可发布",
     },
     {
-      icon: CreditCard,
-      title: "Credits Billing",
-      description:
-        "Pay only for what you use. Each minute of transcription and generation costs credits, with caching to save you money",
+      icon: SlidersHorizontal,
+      title: "输出数量可配置",
+      description: "Thread 条数、单条推文数量与标题候选可调整",
     },
     {
       icon: Share2,
-      title: "Shareable Links",
-      description: "Generate unique links to share your content packages with team members or clients",
-    },
-    {
-      icon: Video,
-      title: "Built for YouTube & Live Replays",
-      description: "Optimized for long-form content, podcasts, tutorials, and live stream recordings",
-    },
-    {
-      icon: FileText,
-      title: "Multiple Content Formats",
-      description: "Get X threads, standalone tweets, YouTube SEO, and highlight clips all in one generation",
-    },
-    {
-      icon: Zap,
-      title: "Lightning Fast Processing",
-      description: "Most videos are processed in under 2 minutes. Get your content assets quickly",
+      title: "可选分享链接",
+      description: "生成只读分享页，便于协作与审阅",
     },
     {
       icon: Link2,
-      title: "Support for X Videos (Beta)",
-      description: "Paste X video links directly—no need to download. Perfect for repurposing social content",
+      title: "仅 YouTube URL",
+      description: "阶段 1 只支持 YouTube 链接输入",
+    },
+    {
+      icon: FileText,
+      title: "三类资产包输出",
+      description: "X Thread、单条推文、YouTube SEO 元数据",
     },
   ]
 
@@ -51,9 +40,9 @@ export function FeaturesSection() {
       <div className="container">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold">Powerful Features</h2>
+            <h2 className="text-3xl md:text-5xl font-bold">核心能力</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to turn your videos into engaging social content
+              聚焦阶段 1 的最小可用能力
             </p>
           </div>
 

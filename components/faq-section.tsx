@@ -3,54 +3,28 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export function FaqSection() {
   const faqs = [
     {
-      question: "What video links and formats are supported?",
-      answer:
-        "We support YouTube video links (including live stream replays), X video links (beta), and direct file uploads in MP4, MOV, and MP3 formats. Maximum file size is 500MB.",
+      question: "阶段 1 支持哪些输入？",
+      answer: "仅支持 YouTube URL 输入，暂不支持本地上传或 X 链接。",
     },
     {
-      question: "Are there limitations on X video links?",
-      answer:
-        "X video link support is currently in beta. Some private or restricted videos may not be accessible. We recommend uploading the video file directly if you encounter issues. Full X integration is coming soon.",
+      question: "必须登录才能生成吗？",
+      answer: "是的。需要通过邮箱 Magic Link 登录后才能开始生成。",
     },
     {
-      question: "Do I need to log in to use Link2Posts?",
-      answer:
-        "You can paste links and upload files without logging in, but you must create a free account (via email magic link) to start generating content. This helps us manage credits and save your generated assets.",
+      question: "生成的内容包含哪些类型？",
+      answer: "固定输出三类资产：X Thread、单条推文、YouTube SEO 元数据。",
     },
     {
-      question: "How are credits calculated?",
-      answer:
-        "Credits are charged in two parts: (1) Transcription costs 2 credits per minute of video, and (2) Content generation costs 6 credits for the complete asset package. If your video has subtitles or we've cached the transcript, transcription is free!",
+      question: "生成时长大概多久？",
+      answer: "多数视频在 2 分钟内完成，具体取决于视频长度与转录情况。",
     },
     {
-      question: "What happens to my video and data?",
-      answer:
-        "We take privacy seriously. Videos are processed securely and never shared. Transcripts and generated content are stored encrypted. You can delete your content anytime from your dashboard. We never train AI models on your content.",
+      question: "支持哪些导出方式？",
+      answer: "结果页支持一键复制，也可导出 Markdown 或 JSON。",
     },
     {
-      question: "How long does processing take?",
-      answer:
-        "Most videos are processed in under 2 minutes. Processing time depends on video length—a 10-minute video typically takes 60-90 seconds, while a 1-hour video might take 5-8 minutes.",
-    },
-    {
-      question: "What formats can I export content in?",
-      answer:
-        "All content can be copied directly with one click. Paid plans also support exporting your complete asset package as PDF or JSON files for archiving or integration with other tools.",
-    },
-    {
-      question: "What if a generation fails or I'm unsatisfied?",
-      answer:
-        "If a generation fails due to an error on our end, credits are automatically refunded. For quality issues, contact our support team—we review each case individually and often provide free re-generations or credit refunds.",
-    },
-    {
-      question: "Can I try it before paying?",
-      answer:
-        "Yes! Every new account gets 20 free credits (enough for ~5 minutes of video + 1-2 generations). No credit card required. Upgrade anytime to get more credits.",
-    },
-    {
-      question: "Do credits expire?",
-      answer:
-        "No, credits never expire. Buy them once and use them whenever you need. Your generated content storage duration depends on your plan (7 days for Free, 30 days for Starter, forever for Creator and Pro).",
+      question: "如果生成失败会怎样？",
+      answer: "会给出明确的失败原因（如抓取失败、无字幕或超时）。",
     },
   ]
 
@@ -59,8 +33,8 @@ export function FaqSection() {
       <div className="container">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold">Frequently Asked Questions</h2>
-            <p className="text-lg text-muted-foreground">Everything you need to know about Link2Posts</p>
+            <h2 className="text-3xl md:text-5xl font-bold">常见问题</h2>
+            <p className="text-lg text-muted-foreground">阶段 1 最常见的问题解答</p>
           </div>
 
           <Accordion type="single" collapsible className="w-full">

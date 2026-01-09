@@ -5,32 +5,31 @@ export function UseCasesSection() {
   const useCases = [
     {
       icon: GraduationCap,
-      title: "Tutorial YouTubers",
-      description:
-        "Turn your how-to videos into step-by-step threads and SEO-optimized descriptions that drive more views",
+      title: "教程类 YouTuber",
+      description: "把教程视频转成线程与 SEO 描述，提升可发现性",
       examples: [
-        "Extract key lessons as tweets",
-        "Generate chapter timestamps automatically",
-        "Create teaser content for promotion",
+        "拆解关键要点为推文",
+        "自动生成章节时间戳",
+        "生成宣传预告内容",
       ],
     },
     {
       icon: Radio,
-      title: "Live Replay Planners",
-      description: "Repurpose your live streams into bite-sized content for maximum reach across platforms",
-      examples: ["Identify best moments from VODs", "Create highlight reels", "Build anticipation for next stream"],
+      title: "直播回放型创作者",
+      description: "把回放内容转换为可复制发布的文字资产",
+      examples: ["提炼关键观点", "生成 Thread 结构", "为下次直播做预热"],
     },
     {
       icon: Mic,
-      title: "Interview & Podcast Channels",
-      description: "Extract quotable moments and create engaging threads from long-form conversations",
-      examples: ["Pull out guest insights", "Generate episode summaries", "Create audiograms with timestamps"],
+      title: "访谈/播客频道",
+      description: "从长对话中提炼金句与内容摘要",
+      examples: ["提取嘉宾观点", "生成节目摘要", "整理可发布要点"],
     },
     {
       icon: User,
-      title: "Solo Creators on X",
-      description: "Maximize your video content by turning it into threads that grow your X audience",
-      examples: ["Cross-post to multiple platforms", "Build thought leadership", "Drive traffic back to YouTube"],
+      title: "X 平台创作者",
+      description: "把视频内容转成线程与单条推文，提升互动",
+      examples: ["分发到多个平台", "建立专业认知", "引流回 YouTube"],
     },
   ]
 
@@ -39,9 +38,9 @@ export function UseCasesSection() {
       <div className="container">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold">Perfect For</h2>
+            <h2 className="text-3xl md:text-5xl font-bold">适合人群</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Whether you're a YouTuber, streamer, or podcaster, Link2Posts helps you maximize your content reach
+              面向 YouTuber、播客与直播回放创作者
             </p>
           </div>
 

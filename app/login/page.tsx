@@ -32,15 +32,15 @@ export default function LoginPage() {
           <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              返回
             </Button>
           </Link>
         </div>
 
         <Card className="border-2">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome to Link2Posts</CardTitle>
-            <CardDescription>Sign in with your email to start generating content</CardDescription>
+            <CardTitle className="text-2xl">欢迎使用 Link2Posts</CardTitle>
+            <CardDescription>使用邮箱 Magic Link 登录后开始生成</CardDescription>
           </CardHeader>
           <CardContent>
             {magicLinkSent ? (
@@ -48,12 +48,12 @@ export default function LoginPage() {
                 <Mail className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-2">
-                    <p className="font-medium">Check your email!</p>
+                    <p className="font-medium">请查收邮件</p>
                     <p className="text-sm">
-                      We've sent a magic link to <strong>{email}</strong>. Click the link to log in securely.
+                      我们已向 <strong>{email}</strong> 发送登录链接，请点击完成登录。
                     </p>
                     <p className="text-xs text-muted-foreground pt-2">
-                      Didn't receive it? Check your spam folder or try again.
+                      如果未收到，请检查垃圾邮件或稍后重试。
                     </p>
                   </div>
                 </AlertDescription>
@@ -62,7 +62,7 @@ export default function LoginPage() {
               <form onSubmit={handleSendMagicLink} className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium">
-                    Email address
+                    邮箱地址
                   </label>
                   <Input
                     id="email"
@@ -79,21 +79,21 @@ export default function LoginPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending magic link...
+                      正在发送登录链接...
                     </>
                   ) : (
                     <>
                       <Mail className="mr-2 h-4 w-4" />
-                      Send magic link
+                      发送登录链接
                     </>
                   )}
                 </Button>
 
                 <div className="text-center space-y-2 pt-4">
                   <p className="text-xs text-muted-foreground">
-                    By continuing, you agree to our Terms of Service and Privacy Policy
+                    继续即表示你同意我们的服务条款与隐私政策
                   </p>
-                  <p className="text-xs text-muted-foreground">🔒 Powered by Supabase Auth - No password required</p>
+                  <p className="text-xs text-muted-foreground">由 Supabase Auth 提供支持，无需密码</p>
                 </div>
               </form>
             )}
@@ -103,7 +103,7 @@ export default function LoginPage() {
         <Card className="border-2 bg-accent/5">
           <CardContent className="p-4">
             <p className="text-sm text-center text-muted-foreground">
-              New users get <strong className="text-foreground">20 free credits</strong> to try Link2Posts
+              新用户可获得 <strong className="text-foreground">20 次免费额度</strong> 体验
             </p>
           </CardContent>
         </Card>
