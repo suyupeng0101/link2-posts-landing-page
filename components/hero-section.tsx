@@ -3,12 +3,21 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { LinkIcon } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { GlobeIcon, LinkIcon } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function HeroSection() {
   const [youtubeUrl, setYoutubeUrl] = useState("")
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [transcriptLanguage, setTranscriptLanguage] = useState("auto")
+  const [outputLanguage, setOutputLanguage] = useState("same_as_transcript")
 
   const handleGenerate = () => {
     setShowLoginPrompt(true)
@@ -47,6 +56,56 @@ export function HeroSection() {
                   onChange={(e) => setYoutubeUrl(e.target.value)}
                   className="h-12"
                 />
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <GlobeIcon className="h-4 w-4" />
+                  语言设置
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      字幕语言
+                    </label>
+                    <Select
+                      value={transcriptLanguage}
+                      onValueChange={setTranscriptLanguage}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="选择字幕语言" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">自动识别</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="zh-Hans">简体中文</SelectItem>
+                        <SelectItem value="es">Espanol</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      输出语言
+                    </label>
+                    <Select
+                      value={outputLanguage}
+                      onValueChange={setOutputLanguage}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="选择输出语言" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="same_as_transcript">
+                          与字幕一致
+                        </SelectItem>
+                        <SelectItem value="en">English (Beta)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  输出语言默认为与字幕一致，英文输出为 Beta 功能。
+                </p>
               </div>
 
             </div>
