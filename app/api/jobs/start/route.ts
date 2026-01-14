@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
-import { YoutubeTranscript } from "youtube-transcript"
+import { generateOutputsWithModel } from "@/lib/repurpose-generation"
+import type { CaptionSegment } from "@/lib/youtube-captions"
 
 export async function POST(request: NextRequest) {
   try {
     const {
       youtubeUrl,
       transcriptLanguage = "auto",
-      outputLanguage = "same_as_transcript",
+      outputLanguage = "en",
       tone = "default",
       audience = "general",
-      threadCount = 10,
-      singlesCount = 3,
+      threadCount = 6,
+      singlesCount = 2,
       titleCandidates = 5,
-      cta = "Watch full video"
+      cta = "Watch full video",
+      captions: providedCaptions,
+      videoId: providedVideoId
     } = await request.json()
 
     if (!youtubeUrl) {
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const videoId = extractVideoId(youtubeUrl)
+    const videoId = providedVideoId || extractVideoId(youtubeUrl)
     if (!videoId) {
       return NextResponse.json(
         { error: "Invalid YouTube URL" },
@@ -32,10 +35,25 @@ export async function POST(request: NextRequest) {
 
     const jobId = generateJobId()
 
-    const job = {
-      id: jobId,
+    const captions = await resolveCaptions({
+      request,
       youtubeUrl,
+      transcriptLanguage,
+      providedCaptions
+    })
+
+    if (!captions.length) {
+      return NextResponse.json(
+        { error: "No captions found for this video. This video may not have captions available." },
+        { status: 404 }
+      )
+    }
+
+    const fullText = captions.map((segment) => segment.text).join(" ")
+
+    const outputs = await generateOutputsWithModel({
       videoId,
+      youtubeUrl,
       transcriptLanguage,
       outputLanguage,
       tone,
@@ -44,16 +62,14 @@ export async function POST(request: NextRequest) {
       singlesCount,
       titleCandidates,
       cta,
-      status: "queued",
-      createdAt: new Date().toISOString()
-    }
-
-    processJob(jobId, job)
+      captions,
+      fullText
+    })
 
     return NextResponse.json({
       jobId,
-      status: "queued",
-      message: "Job created successfully"
+      status: "succeeded",
+      outputs
     })
   } catch (error) {
     console.error("Error creating job:", error)
@@ -82,131 +98,37 @@ function generateJobId(): string {
   return `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
-async function processJob(jobId: string, job: any) {
-  try {
-    console.log(`[Job ${jobId}] Processing started`)
-
-    const captions = await fetchCaptions(job.videoId, job.transcriptLanguage)
-
-    if (!captions || captions.length === 0) {
-      console.log(`[Job ${jobId}] No captions found`)
-      return
-    }
-
-    const fullText = captions.map((c: any) => c.text).join(" ")
-
-    const outputs = generateOutputs(fullText, captions, job)
-
-    console.log(`[Job ${jobId}] Processing completed`)
-  } catch (error) {
-    console.error(`[Job ${jobId}] Processing failed:`, error)
+async function resolveCaptions({
+  request,
+  youtubeUrl,
+  transcriptLanguage,
+  providedCaptions
+}: {
+  request: NextRequest
+  youtubeUrl: string
+  transcriptLanguage: string
+  providedCaptions?: CaptionSegment[]
+}): Promise<CaptionSegment[]> {
+  if (Array.isArray(providedCaptions) && providedCaptions.length > 0) {
+    return providedCaptions
   }
-}
 
-async function fetchCaptions(
-  videoId: string,
-  language: string
-): Promise<Array<{ start: number; end: number; text: string }>> {
-  try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-      lang: language === "auto" ? undefined : language
+  const origin = new URL(request.url).origin
+  const response = await fetch(`${origin}/api/youtube/captions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      youtubeUrl,
+      transcriptLanguage
     })
+  })
 
-    return transcript.map((item) => ({
-      start: item.offset / 1000,
-      end: (item.offset + item.duration) / 1000,
-      text: item.text
-    }))
-  } catch (error) {
-    console.error("Error fetching captions:", error)
-    return []
-  }
-}
-
-function generateOutputs(
-  fullText: string,
-  captions: Array<{ start: number; end: number; text: string }>,
-  job: any
-) {
-  const thread = generateThread(fullText, captions, job.threadCount)
-  const singles = generateSingles(fullText, captions, job.singlesCount)
-  const seo = generateSEO(fullText, captions, job)
-
-  return {
-    thread,
-    singles,
-    seo
-  }
-}
-
-function generateThread(
-  text: string,
-  captions: Array<{ start: number; end: number; text: string }>,
-  count: number
-) {
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10)
-  const thread: Array<{ order: number; text: string; sourceSegments: Array<{ start: number; end: number }> }> = []
-
-  for (let i = 0; i < Math.min(count, sentences.length); i++) {
-    const segment = captions[i % captions.length]
-    thread.push({
-      order: i + 1,
-      text: sentences[i].trim(),
-      sourceSegments: segment ? [{ start: segment.start, end: segment.end }] : []
-    })
+  const data = await response.json()
+  if (!response.ok) {
+    throw new Error(data?.error || "Failed to fetch captions")
   }
 
-  return thread
-}
-
-function generateSingles(
-  text: string,
-  captions: Array<{ start: number; end: number; text: string }>,
-  count: number
-) {
-  const angles = ["summary", "insight", "list"]
-  const singles: Array<{ angle: string; text: string; sourceSegments: Array<{ start: number; end: number }> }> = []
-
-  for (let i = 0; i < Math.min(count, angles.length); i++) {
-    const segment = captions[i % captions.length]
-    singles.push({
-      angle: angles[i],
-      text: `${angles[i].charAt(0).toUpperCase() + angles[i].slice(1)}: ${text.substring(0, 200)}...`,
-      sourceSegments: segment ? [{ start: segment.start, end: segment.end }] : []
-    })
-  }
-
-  return singles
-}
-
-function generateSEO(
-  text: string,
-  captions: Array<{ start: number; end: number; text: string }>,
-  job: any
-) {
-  const words = text.split(/\s+/).filter(w => w.length > 3)
-  const uniqueWords = [...new Set(words)].slice(0, 10)
-
-  return {
-    titles: [
-      `How to ${uniqueWords[0] || "Master"} This Topic`,
-      `The Ultimate Guide to ${uniqueWords[1] || "Success"}`,
-      `5 Tips for ${uniqueWords[2] || "Growth"}`,
-      `Everything You Need to Know About ${uniqueWords[3] || "This"}`,
-      `${uniqueWords[4] || "Amazing"}: A Complete Overview`
-    ],
-    description: `Learn about ${uniqueWords.slice(0, 5).join(", ")}. ${job.cta}.`,
-    chapters: captions.slice(0, 5).map((cap, idx) => ({
-      timestamp: formatTimestamp(cap.start),
-      title: cap.text.substring(0, 50),
-      sourceSegments: [{ start: cap.start, end: cap.end }]
-    })),
-    tags: uniqueWords.slice(0, 10)
-  }
-}
-
-function formatTimestamp(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  return Array.isArray(data?.captions) ? data.captions : []
 }

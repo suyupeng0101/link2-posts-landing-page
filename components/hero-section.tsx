@@ -27,21 +27,44 @@ interface CaptionsResponse {
   error?: string
 }
 
+interface GenerationOutputs {
+  x_thread: Array<{ order: number; text: string }>
+  x_singles: Array<{ angle: string; text: string }>
+  youtube_seo: {
+    titles: string[]
+    description: string
+    chapters: Array<{ timestamp: string; title: string }>
+    tags: string[]
+  }
+}
+
+interface JobResponse {
+  jobId?: string
+  status?: string
+  outputs?: GenerationOutputs
+  error?: string
+}
+
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
 }
 
-export function HeroSection() {
+export function HeroSection({
+  onGenerated,
+}: {
+  onGenerated?: (outputs: GenerationOutputs) => void
+}) {
   const [youtubeUrl, setYoutubeUrl] = useState("")
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
-  const [transcriptLanguage, setTranscriptLanguage] = useState("auto")
-  const [outputLanguage, setOutputLanguage] = useState("same_as_transcript")
+  const [transcriptLanguage] = useState("auto")
+  const [outputLanguage, setOutputLanguage] = useState("en")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [captions, setCaptions] = useState<CaptionSegment[] | null>(null)
   const [videoId, setVideoId] = useState<string | null>(null)
+  const [showAllCaptions, setShowAllCaptions] = useState(false)
 
   const handleGenerate = async () => {
     if (!youtubeUrl) return
@@ -49,6 +72,7 @@ export function HeroSection() {
     setIsLoading(true)
     setError(null)
     setCaptions(null)
+    setShowAllCaptions(false)
 
     try {
       const response = await fetch("/api/youtube/captions", {
@@ -81,17 +105,21 @@ export function HeroSection() {
         body: JSON.stringify({
           youtubeUrl,
           transcriptLanguage,
-          outputLanguage
+          outputLanguage,
+          captions: data.captions,
+          videoId: data.videoId
         })
       })
 
-      const jobData = await jobResponse.json()
+      const jobData: JobResponse = await jobResponse.json()
 
       if (!jobResponse.ok) {
         throw new Error(jobData.error || "Failed to create job")
       }
 
-      console.log("Job created:", jobData.jobId)
+      if (jobData.outputs && onGenerated) {
+        onGenerated(jobData.outputs)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -101,12 +129,10 @@ export function HeroSection() {
 
   return (
     <section id="hero" className="relative py-20 md:py-32 overflow-hidden">
-      {/* Background gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none" />
 
       <div className="container relative">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Hero Text */}
           <div className="space-y-4">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
               一键把 YouTube 视频变成 <span className="text-primary">可发布内容资产</span>
@@ -116,10 +142,8 @@ export function HeroSection() {
             </p>
           </div>
 
-          {/* Input Section */}
           <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-lg space-y-6 max-w-2xl mx-auto">
             <div className="space-y-4">
-              {/* YouTube URL Input */}
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <LinkIcon className="h-4 w-4" />
@@ -144,18 +168,12 @@ export function HeroSection() {
                     <label className="text-xs font-medium text-muted-foreground">
                       字幕语言
                     </label>
-                    <Select
-                      value={transcriptLanguage}
-                      onValueChange={setTranscriptLanguage}
-                    >
+                    <Select value={transcriptLanguage} onValueChange={() => {}} disabled>
                       <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="选择字幕语言" />
+                        <SelectValue placeholder="自动识别" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="auto">自动识别</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="zh-Hans">简体中文</SelectItem>
-                        <SelectItem value="es">Espanol</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -171,29 +189,24 @@ export function HeroSection() {
                         <SelectValue placeholder="选择输出语言" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="same_as_transcript">
-                          与字幕一致
-                        </SelectItem>
-                        <SelectItem value="en">English (Beta)</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="zh-Hans">Chinese</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  输出语言默认为与字幕一致，英文输出为 Beta 功能。
+                  输出语言默认为 English，可切换为 Chinese。
                 </p>
               </div>
-
             </div>
 
-            {/* Error Alert */}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            {/* Captions Preview */}
             {captions && captions.length > 0 && (
               <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -204,25 +217,38 @@ export function HeroSection() {
                     Video ID: {videoId}
                   </span>
                 </div>
-                <div className="max-h-40 overflow-y-auto space-y-2">
-                  {captions.slice(0, 5).map((caption, idx) => (
-                    <div key={idx} className="text-xs text-muted-foreground">
-                      <span className="font-mono text-primary">
-                        {formatTime(caption.start)}
-                      </span>
-                      {" "}{caption.text}
-                    </div>
-                  ))}
-                  {captions.length > 5 && (
-                    <div className="text-xs text-muted-foreground">
-                      ... 还有 {captions.length - 5} 段字幕
-                    </div>
+                <div
+                  className={`space-y-2 ${
+                    showAllCaptions
+                      ? "max-h-72 overflow-y-auto"
+                      : "max-h-40 overflow-y-auto"
+                  }`}
+                >
+                  {(showAllCaptions ? captions : captions.slice(0, 6)).map(
+                    (caption, idx) => (
+                      <div key={idx} className="text-xs text-muted-foreground">
+                        <span className="font-mono text-primary">
+                          {formatTime(caption.start)}
+                        </span>
+                        {" "}{caption.text}
+                      </div>
+                    )
                   )}
                 </div>
+                {captions.length > 6 && (
+                  <button
+                    type="button"
+                    className="mt-3 w-full text-center text-xs text-primary hover:underline"
+                    onClick={() => setShowAllCaptions((prev) => !prev)}
+                  >
+                    {showAllCaptions
+                      ? "收起字幕"
+                      : `... 还有 ${captions.length - 6} 段字幕，点击查看全部`}
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Login Prompt */}
             {showLoginPrompt && (
               <Alert className="bg-accent/10 border-accent">
                 <AlertDescription className="flex items-center justify-between">
@@ -234,7 +260,6 @@ export function HeroSection() {
               </Alert>
             )}
 
-            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 size="lg"
@@ -257,7 +282,6 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Trust Indicators */}
           <p className="text-sm text-muted-foreground">
             无需绑卡；多数视频处理时间在 2 分钟内
           </p>
