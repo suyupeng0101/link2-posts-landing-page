@@ -13,6 +13,7 @@ import {
 import { GlobeIcon, LinkIcon, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LoginDialog } from "@/components/login-dialog"
+import { openLoginDialog } from "@/lib/login-dialog"
 
 interface CaptionSegment {
   start: number
@@ -69,6 +70,23 @@ export function HeroSection({
 
   const handleGenerate = async () => {
     if (!youtubeUrl) return
+
+    try {
+      const authResponse = await fetch("/api/auth/user", { cache: "no-store" })
+      const authData = await authResponse.json()
+
+      if (!authResponse.ok || !authData?.user) {
+        setShowLoginPrompt(true)
+        openLoginDialog()
+        return
+      }
+    } catch {
+      setShowLoginPrompt(true)
+      openLoginDialog()
+      return
+    }
+
+    setShowLoginPrompt(false)
 
     setIsLoading(true)
     setError(null)
@@ -249,13 +267,6 @@ export function HeroSection({
               <Alert className="bg-accent/10 border-accent">
                 <AlertDescription className="flex items-center justify-between">
                   <span className="text-sm">请先登录再开始生成</span>
-                  <LoginDialog
-                    trigger={
-                      <Button size="sm">
-                        去登录
-                      </Button>
-                    }
-                  />
                 </AlertDescription>
               </Alert>
             )}

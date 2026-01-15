@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fetchRapidApiCaptions } from "@/lib/rapidapi-transcript"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { youtubeUrl, transcriptLanguage = "auto" } = await request.json()
 
     if (!youtubeUrl) {

@@ -1,9 +1,24 @@
+/*
+ * @Description: 
+ * @Version: 1.0
+ * @Autor: pawn
+ * @Date: 2026-01-15 14:20:39
+ * @LastEditors: pawn
+ * @LastEditTime: 2026-01-15 15:11:34
+ */
 "use client"
 
 import type { ReactNode } from "react"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { signInWithGoogle } from "@/app/login/actions"
 
 type LoginDialogProps = {
@@ -11,16 +26,23 @@ type LoginDialogProps = {
 }
 
 export function LoginDialog({ trigger }: LoginDialogProps) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const handleOpen = () => setOpen(true)
+    window.addEventListener("login-dialog:open", handleOpen)
+    return () => window.removeEventListener("login-dialog:open", handleOpen)
+  }, [])
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-md rounded-3xl border border-border/60 bg-white/90 p-6 shadow-[0_24px_80px_-45px_rgba(15,23,42,0.6)] backdrop-blur">
-        <DialogTitle className="sr-only">登录</DialogTitle>
+      <DialogContent className="max-w-md rounded-3xl border border-border/60 bg-white/95 p-6 shadow-[0_24px_80px_-45px_rgba(15,23,42,0.6)] backdrop-blur">
+        <DialogTitle className="text-lg font-semibold text-foreground">登录</DialogTitle>
+        <DialogDescription className="text-xs text-muted-foreground">
+          选择一个账号快速开始
+        </DialogDescription>
         <div className="space-y-4">
-          <div className="space-y-1">
-            <p className="text-lg font-semibold text-foreground">继续登录</p>
-            <p className="text-xs text-muted-foreground">选择一个账号快速开始</p>
-          </div>
           <form action={signInWithGoogle} className="w-full">
             <Button
               type="submit"
