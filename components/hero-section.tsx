@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import { GlobeIcon, LinkIcon, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { LoginDialog } from "@/components/login-dialog"
 
 interface CaptionSegment {
   start: number
@@ -78,12 +79,12 @@ export function HeroSection({
       const response = await fetch("/api/youtube/captions", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           youtubeUrl,
-          transcriptLanguage
-        })
+          transcriptLanguage,
+        }),
       })
 
       const data: CaptionsResponse = await response.json()
@@ -100,15 +101,15 @@ export function HeroSection({
       const jobResponse = await fetch("/api/jobs/start", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           youtubeUrl,
           transcriptLanguage,
           outputLanguage,
           captions: data.captions,
-          videoId: data.videoId
-        })
+          videoId: data.videoId,
+        }),
       })
 
       const jobData: JobResponse = await jobResponse.json()
@@ -181,10 +182,7 @@ export function HeroSection({
                     <label className="text-xs font-medium text-muted-foreground">
                       输出语言
                     </label>
-                    <Select
-                      value={outputLanguage}
-                      onValueChange={setOutputLanguage}
-                    >
+                    <Select value={outputLanguage} onValueChange={setOutputLanguage}>
                       <SelectTrigger className="h-10 w-full">
                         <SelectValue placeholder="选择输出语言" />
                       </SelectTrigger>
@@ -196,7 +194,7 @@ export function HeroSection({
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  输出语言默认为 English，可切换为 Chinese。
+                  输出语言默认 English，可切换为 Chinese。
                 </p>
               </div>
             </div>
@@ -211,11 +209,9 @@ export function HeroSection({
               <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium">
-                    字幕已提取 ({captions.length} 段)
+                    字幕已提取（{captions.length} 段）
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    Video ID: {videoId}
-                  </span>
+                  <span className="text-xs text-muted-foreground">Video ID: {videoId}</span>
                 </div>
                 <div
                   className={`space-y-2 ${
@@ -229,8 +225,8 @@ export function HeroSection({
                       <div key={idx} className="text-xs text-muted-foreground">
                         <span className="font-mono text-primary">
                           {formatTime(caption.start)}
-                        </span>
-                        {" "}{caption.text}
+                        </span>{" "}
+                        {caption.text}
                       </div>
                     )
                   )}
@@ -253,9 +249,13 @@ export function HeroSection({
               <Alert className="bg-accent/10 border-accent">
                 <AlertDescription className="flex items-center justify-between">
                   <span className="text-sm">请先登录再开始生成</span>
-                  <Button size="sm" asChild>
-                    <a href="/login">去登录</a>
-                  </Button>
+                  <LoginDialog
+                    trigger={
+                      <Button size="sm">
+                        去登录
+                      </Button>
+                    }
+                  />
                 </AlertDescription>
               </Alert>
             )}
@@ -283,7 +283,7 @@ export function HeroSection({
           </div>
 
           <p className="text-sm text-muted-foreground">
-            无需绑卡；多数视频处理时间在 2 分钟内
+            无需绑卡；多数视频处理时间在 2 分钟内。
           </p>
         </div>
       </div>

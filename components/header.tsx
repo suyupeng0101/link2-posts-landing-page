@@ -1,9 +1,76 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { LoginDialog } from "@/components/login-dialog"
+
+type AuthUser = {
+  id: string
+  email?: string | null
+  user_metadata?: {
+    avatar_url?: string
+    full_name?: string
+  }
+}
 
 export function Header() {
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadUser() {
+      try {
+        const response = await fetch("/api/auth/user", { cache: "no-store" })
+        const data = await response.json()
+        if (isMounted) {
+          setUser(data.user ?? null)
+        }
+      } catch {
+        if (isMounted) {
+          setUser(null)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadUser()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const displayName = useMemo(() => {
+    if (!user) return "访客"
+    return user.user_metadata?.full_name || user.email || "已登录用户"
+  }, [user])
+
+  const avatarFallback = useMemo(() => {
+    if (!user) return "U"
+    const source = user.user_metadata?.full_name || user.email || "U"
+    return source.slice(0, 1).toUpperCase()
+  }, [user])
+
+  const handleSignOut = async () => {
+    await fetch("/api/auth/signout", { method: "POST" })
+    window.location.href = "/"
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -30,11 +97,42 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              登录
-            </Button>
-          </Link>
+          {!isLoading && !user ? (
+            <LoginDialog
+              trigger={
+                <Button variant="ghost" size="sm">
+                  登录
+                </Button>
+              }
+            />
+          ) : null}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt={displayName} />
+                    <AvatarFallback>{avatarFallback}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium">{displayName}</span>
+                    {user.email ? (
+                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                    ) : null}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">个人资料</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>退出登录</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
           <Link href="#hero">
             <Button size="sm">立即开始</Button>
           </Link>
