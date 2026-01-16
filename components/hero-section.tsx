@@ -4,14 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +13,6 @@ import {
 import { GlobeIcon, LinkIcon, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LoginDialog } from "@/components/login-dialog"
-import { CreemCheckoutButton } from "@/components/creem-checkout-button"
 import { openLoginDialog } from "@/lib/login-dialog"
 
 interface CaptionSegment {
@@ -76,7 +67,6 @@ export function HeroSection({
   const [captions, setCaptions] = useState<CaptionSegment[] | null>(null)
   const [videoId, setVideoId] = useState<string | null>(null)
   const [showAllCaptions, setShowAllCaptions] = useState(false)
-  const creemPriceId = process.env.NEXT_PUBLIC_CREEM_PRICE_CREATOR ?? ""
 
   const handleGenerate = async () => {
     if (!youtubeUrl) return
@@ -301,40 +291,6 @@ export function HeroSection({
                 <a href="#result-preview">查看示例</a>
               </Button>
             </div>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="lg" variant="secondary" className="w-full h-12 text-base">
-                  充值
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>充值订单</DialogTitle>
-                  <DialogDescription>
-                    Test Mode 支付，确认后将跳转 Creem 支付页
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <div className="text-sm text-muted-foreground">Creator 套餐</div>
-                    <div className="mt-2 text-2xl font-semibold">￥129</div>
-                    <div className="mt-1 text-xs text-muted-foreground">180 credits，适合正常生产内容</div>
-                  </div>
-                  <CreemCheckoutButton
-                    className="w-full"
-                    planId="creator"
-                    priceId={creemPriceId}
-                    disabled={!creemPriceId}
-                  >
-                    {creemPriceId ? "确认支付" : "请先配置价格 ID"}
-                  </CreemCheckoutButton>
-                  <p className="text-xs text-muted-foreground">
-                    支付完成后自动跳转并入账，可在账号中查看余额
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
 
           <p className="text-sm text-muted-foreground">
