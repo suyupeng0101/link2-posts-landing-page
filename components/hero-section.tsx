@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -289,6 +290,9 @@ export function HeroSection({
               </Button>
               <Button size="lg" variant="outline" className="flex-1 h-12 text-base bg-transparent" asChild>
                 <a href="#result-preview">查看示例</a>
+              </Button>
+              <Button size="lg" variant="secondary" className="flex-1 h-12 text-base" asChild>
+                <Link href="/pricing">充值积分</Link>
               </Button>
             </div>
           </div>
