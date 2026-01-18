@@ -35,6 +35,46 @@ create table if not exists public.credits_balance (
   updated_at timestamptz not null default now() -- 最近一次余额更新时间
 );
 
+-- 产品配置表：全局计价与扣费参数。
+create table if not exists public.product_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
+insert into public.product_settings (key, value)
+values
+  ('credit_value_usd', '0.01'),
+  ('credits_per_generation', '12')
+on conflict (key) do update
+  set value = excluded.value,
+      updated_at = now();
+
+-- 充值套餐表：支持按量包配置与赠送额度。
+create table if not exists public.credit_plans (
+  id text primary key,
+  title text not null,
+  price_cents int not null, -- 以分为单位的美元金额
+  currency text not null default 'USD',
+  credits int not null, -- 基础积分
+  bonus int not null default 0, -- 赠送积分
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+insert into public.credit_plans (id, title, price_cents, currency, credits, bonus, is_active)
+values
+  ('lite', '轻量包', 1000, 'USD', 100, 0, true),
+  ('value', '进阶包', 5000, 'USD', 500, 25, true),
+  ('pro', '高频包', 10000, 'USD', 1000, 80, true)
+on conflict (id) do update
+  set title = excluded.title,
+      price_cents = excluded.price_cents,
+      currency = excluded.currency,
+      credits = excluded.credits,
+      bonus = excluded.bonus,
+      is_active = excluded.is_active;
+
 -- 积分流水表：记录每一次积分变更，用于审计与对账。
 create table if not exists public.credits_ledger (
   id bigserial primary key,
@@ -105,3 +145,52 @@ create table if not exists public.generation_job_items (
 
 -- 按任务快速查询生成内容。
 create index if not exists generation_job_items_job_idx on public.generation_job_items (job_id);
+
+-- 新用户注册时自动创建 user_profiles + 初始积分。
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.user_profiles (
+    user_id,
+    email,
+    full_name,
+    avatar_url,
+    provider,
+    created_at,
+    last_login_at,
+    login_count,
+    points_balance,
+    points_earned_total,
+    points_spent_total
+  )
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+    new.raw_user_meta_data->>'avatar_url',
+    new.raw_app_meta_data->>'provider',
+    now(),
+    now(),
+    1,
+    0,
+    0,
+    0
+  )
+  on conflict (user_id) do nothing;
+
+  insert into public.credits_balance (user_id, balance, updated_at)
+  values (new.id, 12, now())
+  on conflict (user_id) do nothing;
+
+  insert into public.credits_ledger (user_id, change_amount, reason, note)
+  values (new.id, 12, 'signup', 'signup bonus')
+  on conflict do nothing;
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();

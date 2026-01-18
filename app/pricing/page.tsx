@@ -22,39 +22,30 @@ type RechargePlan = {
 
 const plans: RechargePlan[] = [
   {
-    id: "starter",
-    title: "入门包",
-    price: 9,
+    id: "lite",
+    title: "轻量包",
+    price: 10,
     currency: "USD",
-    credits: 60,
-    tagline: "适合偶尔使用的轻量需求",
+    credits: 100,
+    tagline: "适合体验与低频使用",
   },
   {
-    id: "creator",
-    title: "创作者包",
-    price: 19,
+    id: "value",
+    title: "进阶包",
+    price: 50,
     currency: "USD",
-    credits: 160,
-    bonus: 20,
-    tagline: "热门选择，覆盖常规创作",
-  },
-  {
-    id: "growth",
-    title: "增长包",
-    price: 39,
-    currency: "USD",
-    credits: 360,
-    bonus: 60,
-    tagline: "适合稳定产出与多账号运营",
+    credits: 500,
+    bonus: 25,
+    tagline: "主力选择，含 5% 赠送",
   },
   {
     id: "pro",
-    title: "专业包",
-    price: 99,
+    title: "高频包",
+    price: 100,
     currency: "USD",
     credits: 1000,
-    bonus: 200,
-    tagline: "团队与高频场景",
+    bonus: 80,
+    tagline: "高频创作场景，含 8% 赠送",
   },
 ]
 
@@ -97,9 +88,6 @@ export default function PricingPage() {
           },
           body: JSON.stringify({
             planId: plan.id,
-            amount: plan.price,
-            currency: plan.currency,
-            credits: plan.credits + (plan.bonus ?? 0),
           }),
         })
         const data = await response.json()
@@ -117,7 +105,7 @@ export default function PricingPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ orderId: data.orderID }),
+          body: JSON.stringify({ orderId: data.orderID, planId: plan.id }),
         })
         const capture = await response.json()
         if (!response.ok) {
@@ -160,7 +148,7 @@ export default function PricingPage() {
             <div className="text-center space-y-3">
               <h1 className="text-3xl md:text-4xl font-semibold">充值获取积分</h1>
               <p className="text-muted-foreground text-base md:text-lg">
-                选择合适的充值包，通过 PayPal 完成支付后即可获得对应积分。
+                选择合适的充值包，通过 PayPal 完成支付后即可获得对应积分，按量包长期有效。
               </p>
             </div>
 
@@ -224,6 +212,9 @@ export default function PricingPage() {
                       <span className="font-semibold">
                         ${selectedPlan.price.toFixed(2)} USD
                       </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      单次生成扣 12 credits（含转录与生成）
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <CreditCard className="h-4 w-4" />

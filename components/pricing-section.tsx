@@ -5,72 +5,45 @@ import { Check } from "lucide-react"
 export function PricingSection() {
   const plans = [
     {
-      name: "Free",
-      price: "$0",
-      credits: "20 credits",
-      description: "Try Link2Posts with limited credits",
+      name: "轻量包",
+      price: "$10",
+      credits: "100 credits",
+      description: "适合体验与低频使用",
       features: [
-        "~5 minutes of video transcription",
-        "1-2 content generation packages",
-        "All output formats included",
-        "Email support",
-        "Content expires after 7 days",
+        "约 8 次生成（按 12 credits/次）",
+        "按量包，不限使用周期",
+        "包含全部输出格式",
+        "基础客服支持",
       ],
-      cta: "Start Free",
+      cta: "立即充值",
       popular: false,
     },
     {
-      name: "Starter",
-      price: "$9",
-      credits: "60 credits",
-      description: "Perfect for casual creators",
+      name: "进阶包",
+      price: "$50",
+      credits: "525 credits",
+      description: "最划算的主力选择",
       features: [
-        "~15 minutes of video transcription",
-        "Up to 5 content packages",
-        "All output formats included",
-        "Priority email support",
-        "Content saved for 30 days",
-        "Export to PDF/JSON",
+        "含 5% 赠送（+25 credits）",
+        "约 43 次生成（按 12 credits/次）",
+        "按量包，不限使用周期",
+        "优先客服支持",
       ],
-      cta: "Get Started",
-      popular: false,
-    },
-    {
-      name: "Creator",
-      price: "$19",
-      credits: "180 credits",
-      description: "Best for regular content creators",
-      features: [
-        "~45 minutes of video transcription",
-        "Up to 15 content packages",
-        "All output formats included",
-        "Priority support + live chat",
-        "Content saved forever",
-        "Export to PDF/JSON",
-        "Shareable team links",
-        "Subtitle caching (save credits)",
-      ],
-      cta: "Get Started",
+      cta: "立即充值",
       popular: true,
     },
     {
-      name: "Pro",
-      price: "$29",
-      credits: "420 credits",
-      description: "For power users and agencies",
+      name: "高频包",
+      price: "$100",
+      credits: "1080 credits",
+      description: "高频创作与团队协作",
       features: [
-        "~105 minutes of video transcription",
-        "Up to 35 content packages",
-        "All output formats included",
-        "Dedicated support",
-        "Content saved forever",
-        "Export to PDF/JSON",
-        "Shareable team links",
-        "Subtitle caching (save credits)",
-        "Custom branding",
-        "API access (coming soon)",
+        "含 8% 赠送（+80 credits）",
+        "约 90 次生成（按 12 credits/次）",
+        "按量包，不限使用周期",
+        "专属客服支持",
       ],
-      cta: "Get Started",
+      cta: "立即充值",
       popular: false,
     },
   ]
@@ -80,13 +53,13 @@ export function PricingSection() {
       <div className="container">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold">Simple, Transparent Pricing</h2>
+            <h2 className="text-3xl md:text-5xl font-bold">按量包定价，清晰透明</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Pay only for what you use. No subscriptions, no hidden fees.
+              按使用付费，不订阅、不捆绑，没有隐藏费用。
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan, index) => (
               <Card
                 key={index}
@@ -95,7 +68,7 @@ export function PricingSection() {
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                      Most Popular
+                      最受欢迎
                     </span>
                   </div>
                 )}
@@ -103,7 +76,6 @@ export function PricingSection() {
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
                   </div>
                   <div className="text-sm font-medium text-primary">{plan.credits}</div>
                   <CardDescription>{plan.description}</CardDescription>
@@ -126,21 +98,13 @@ export function PricingSection() {
           </div>
 
           <div className="bg-card border border-border rounded-xl p-6 max-w-3xl mx-auto">
-            <h3 className="text-lg font-semibold mb-3">How Credits Work</h3>
+            <h3 className="text-lg font-semibold mb-3">积分扣费规则</h3>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                • <span className="font-medium text-foreground">Transcription:</span> 2 credits per minute of video
-              </p>
-              <p>
-                • <span className="font-medium text-foreground">Content Generation:</span> 6 credits per asset package
-                (Thread + Tweets + SEO + Highlights)
-              </p>
-              <p>
-                • <span className="font-medium text-foreground">Save Credits:</span> If your video already has subtitles
-                or we've cached it, transcription is free!
-              </p>
+              <p>- 每次点击生成：12 credits</p>
+              <p>- 1 credit = $0.01</p>
+              <p>- 按量包充值后长期有效</p>
               <p className="pt-2 text-xs">
-                Example: A 10-minute video costs 20 credits (transcription) + 6 credits (generation) = 26 credits total
+                例：充值 $50 可得 525 credits，约可生成 43 次内容。
               </p>
             </div>
           </div>

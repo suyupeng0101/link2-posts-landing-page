@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 
+const SIGNUP_BONUS_CREDITS = 12
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
@@ -44,6 +46,19 @@ export async function GET(request: Request) {
               points_balance: 0,
               points_earned_total: 0,
               points_spent_total: 0,
+            })
+
+            await supabaseAdmin.from("credits_balance").upsert({
+              user_id: user.id,
+              balance: SIGNUP_BONUS_CREDITS,
+              updated_at: new Date().toISOString(),
+            })
+
+            await supabaseAdmin.from("credits_ledger").insert({
+              user_id: user.id,
+              change_amount: SIGNUP_BONUS_CREDITS,
+              reason: "signup",
+              note: "signup bonus",
             })
           }
         } catch {

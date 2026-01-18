@@ -3,23 +3,25 @@ import { getPayPalAccessToken, getPayPalApiBase } from "@/lib/paypal"
 
 type CreateOrderPayload = {
   planId?: string
-  amount: number | string
-  currency: string
-  credits?: number
 }
+
+const plans = {
+  lite: { amount: 10, currency: "USD", credits: 100, bonus: 0 },
+  value: { amount: 50, currency: "USD", credits: 500, bonus: 25 },
+  pro: { amount: 100, currency: "USD", credits: 1000, bonus: 80 },
+} as const
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateOrderPayload
-    const amountValue = Number.parseFloat(String(body.amount))
+    const plan = body.planId ? plans[body.planId as keyof typeof plans] : null
 
-    if (!Number.isFinite(amountValue) || amountValue <= 0) {
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
+    if (!plan) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
-    if (!body.currency || typeof body.currency !== "string") {
-      return NextResponse.json({ error: "Invalid currency" }, { status: 400 })
-    }
+    const amountValue = plan.amount
+    const creditsGranted = plan.credits + plan.bonus
 
     const accessToken = await getPayPalAccessToken()
     const response = await fetch(`${getPayPalApiBase()}/v2/checkout/orders`, {
@@ -33,10 +35,10 @@ export async function POST(request: Request) {
         purchase_units: [
           {
             amount: {
-              currency_code: body.currency.toUpperCase(),
+              currency_code: plan.currency,
               value: amountValue.toFixed(2),
             },
-            description: body.credits ? `充值 ${body.credits} 积分` : "积分充值",
+            description: `充值 ${creditsGranted} 积分`,
             custom_id: body.planId,
           },
         ],
