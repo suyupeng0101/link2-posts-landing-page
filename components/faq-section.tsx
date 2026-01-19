@@ -1,3 +1,11 @@
+/*
+ * @Description: 
+ * @Version: 1.0
+ * @Autor: pawn
+ * @Date: 2026-01-13 15:57:25
+ * @LastEditors: pawn
+ * @LastEditTime: 2026-01-19 21:11:10
+ */
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export function FaqSection() {
@@ -8,7 +16,7 @@ export function FaqSection() {
     },
     {
       question: "必须登录才能生成吗？",
-      answer: "是的。需要通过邮箱 Magic Link 登录后才能开始生成。",
+      answer: "是的。需要通过邮箱登录后才能开始生成（目前只支持Google邮箱）。",
     },
     {
       question: "生成的内容包含哪些类型？",

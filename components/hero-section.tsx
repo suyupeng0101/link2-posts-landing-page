@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -59,6 +59,7 @@ export function HeroSection({
 }: {
   onGenerated?: (outputs: GenerationOutputs) => void
 }) {
+  const router = useRouter()
   const [youtubeUrl, setYoutubeUrl] = useState("")
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [transcriptLanguage] = useState("auto")
@@ -69,19 +70,26 @@ export function HeroSection({
   const [videoId, setVideoId] = useState<string | null>(null)
   const [showAllCaptions, setShowAllCaptions] = useState(false)
 
-  const handleGenerate = async () => {
-    if (!youtubeUrl) return
-
+  const ensureAuthenticated = async () => {
     try {
       const authResponse = await fetch("/api/auth/user", { cache: "no-store" })
       const authData = await authResponse.json()
 
       if (!authResponse.ok || !authData?.user) {
-        setShowLoginPrompt(true)
-        openLoginDialog()
-        return
+        return false
       }
     } catch {
+      return false
+    }
+
+    return true
+  }
+
+  const handleGenerate = async () => {
+    if (!youtubeUrl) return
+
+    const authed = await ensureAuthenticated()
+    if (!authed) {
       setShowLoginPrompt(true)
       openLoginDialog()
       return
@@ -145,6 +153,17 @@ export function HeroSection({
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleRechargeClick = async () => {
+    const authed = await ensureAuthenticated()
+    if (!authed) {
+      setShowLoginPrompt(true)
+      openLoginDialog()
+      return
+    }
+    setShowLoginPrompt(false)
+    router.push("/pricing")
   }
 
   return (
@@ -267,7 +286,7 @@ export function HeroSection({
             {showLoginPrompt && (
               <Alert className="bg-accent/10 border-accent">
                 <AlertDescription className="flex items-center justify-between">
-                  <span className="text-sm">请先登录再开始生成</span>
+                  <span className="text-sm">请先进行登录</span>
                 </AlertDescription>
               </Alert>
             )}
@@ -275,7 +294,7 @@ export function HeroSection({
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 size="lg"
-                className="flex-1 h-12 text-base"
+                className="flex-1 h-12 text-base bg-sky-600 text-white shadow-sm hover:bg-sky-500 disabled:bg-sky-300 disabled:text-white"
                 onClick={handleGenerate}
                 disabled={!youtubeUrl || isLoading}
               >
@@ -288,11 +307,21 @@ export function HeroSection({
                   "开始生成"
                 )}
               </Button>
-              <Button size="lg" variant="outline" className="flex-1 h-12 text-base bg-transparent" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="flex-1 h-12 text-base border-slate-300 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900"
+                asChild
+              >
                 <a href="#result-preview">查看示例</a>
               </Button>
-              <Button size="lg" variant="secondary" className="flex-1 h-12 text-base" asChild>
-                <Link href="/pricing">充值积分</Link>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="flex-1 h-12 text-base bg-emerald-600 text-white hover:bg-emerald-500"
+                onClick={handleRechargeClick}
+              >
+                充值积分
               </Button>
             </div>
           </div>

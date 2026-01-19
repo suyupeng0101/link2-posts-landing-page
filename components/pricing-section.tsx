@@ -1,8 +1,37 @@
+"use client"
+
+import { useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
+import { openLoginDialog } from "@/lib/login-dialog"
 
 export function PricingSection() {
+  const router = useRouter()
+  const ensureAuthenticated = useCallback(async () => {
+    try {
+      const authResponse = await fetch("/api/auth/user", { cache: "no-store" })
+      const authData = await authResponse.json()
+
+      if (!authResponse.ok || !authData?.user) {
+        return false
+      }
+    } catch {
+      return false
+    }
+
+    return true
+  }, [])
+
+  const handleRechargeClick = useCallback(async () => {
+    const authed = await ensureAuthenticated()
+    if (!authed) {
+      openLoginDialog()
+      return
+    }
+    router.push("/pricing")
+  }, [ensureAuthenticated, router])
   const plans = [
     {
       name: "轻量包",
@@ -81,7 +110,11 @@ export function PricingSection() {
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
+                  <Button
+                    className="w-full"
+                    variant={plan.popular ? "default" : "outline"}
+                    onClick={handleRechargeClick}
+                  >
                     {plan.cta}
                   </Button>
                   <ul className="space-y-2">

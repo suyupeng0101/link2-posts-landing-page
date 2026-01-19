@@ -98,6 +98,7 @@ export default function PricingPage() {
       },
       onApprove: async (data: { orderID?: string }) => {
         if (!data.orderID) return
+        const plan = selectedPlanRef.current
         setStatus("processing")
         setMessage("支付处理中，请稍候确认结果")
         const response = await fetch("/api/paypal/capture-order", {
@@ -111,8 +112,7 @@ export default function PricingPage() {
         if (!response.ok) {
           throw new Error(capture?.error || "支付确认失败")
         }
-        const plan = selectedPlanRef.current
-        setStatus("success")
+          setStatus("success")
         setMessage(`支付成功，已充值 ${plan.credits + (plan.bonus ?? 0)} 积分`)
       },
       onError: (err: unknown) => {

@@ -105,6 +105,7 @@ export async function POST(request: Request) {
       .select("id")
 
     if (paymentError) {
+      console.error("paypal capture payment error", paymentError)
       return NextResponse.json(
         { error: "Failed to record payment" },
         { status: 500 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -24,6 +26,7 @@ type AuthUser = {
 }
 
 export function Header() {
+  const pathname = usePathname()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -71,25 +74,32 @@ export function Header() {
     window.location.href = "/"
   }
 
+  const homeAnchor = (hash: string) => (pathname === "/" ? hash : `/${hash}`)
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">L2P</span>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Link2Posts"
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-md object-contain"
+            priority
+          />
           <span className="text-xl font-semibold">Link2Posts</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
           <Link
-            href="#features"
+            href={homeAnchor("#features")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             功能
           </Link>
           <Link
-            href="#faq"
+            href={homeAnchor("#faq")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             常见问题
@@ -133,7 +143,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
-          <Link href="#hero">
+          <Link href={homeAnchor("#hero")}>
             <Button size="sm">立即开始</Button>
           </Link>
         </div>

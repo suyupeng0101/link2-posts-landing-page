@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Twitter, Github, Linkedin, Youtube } from "lucide-react"
 
 export function Footer() {
@@ -92,9 +93,13 @@ export function Footer() {
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">L2P</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Link2Posts"
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-md object-contain"
+            />
             <span className="font-semibold">Link2Posts</span>
           </div>
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Link2Posts. All rights reserved.</p>

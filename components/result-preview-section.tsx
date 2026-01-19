@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, Download } from "lucide-react"
 
 type ResultPreviewProps = {
   outputs?: {
@@ -26,10 +26,56 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
   const seo = outputs?.youtube_seo
   const hasOutputs = !!(threadItems.length || singleItems.length || seo)
 
+  const threadText = threadItems.map((item) => item.text).join("\n\n")
+  const threadMarkdown = threadItems
+    .map((item, index) => `${index + 1}. ${item.text}`)
+    .join("\n")
+  const threadJson = JSON.stringify(threadItems, null, 2)
+
+  const singlesText = singleItems.map((item) => item.text).join("\n\n")
+  const singlesMarkdown = singleItems.map((item) => `- ${item.text}`).join("\n")
+  const singlesJson = JSON.stringify(singleItems, null, 2)
+
+  const seoMarkdown = seo
+    ? [
+        "## YouTube SEO",
+        "",
+        "### 标题候选",
+        seo.titles?.length ? seo.titles.map((title) => `- ${title}`).join("\n") : "-",
+        "",
+        "### 描述",
+        seo.description || "-",
+        "",
+        "### 章节",
+        seo.chapters?.length
+          ? seo.chapters
+              .map((chapter) => `- ${chapter.timestamp} ${chapter.title}`)
+              .join("\n")
+          : "-",
+        "",
+        "### 标签",
+        seo.tags?.length ? seo.tags.map((tag) => `#${tag}`).join(" ") : "-",
+        "",
+      ].join("\n")
+    : ""
+  const seoJson = JSON.stringify(seo ?? {}, null, 2)
+
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const handleDownload = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -39,7 +85,9 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
           <div className="text-center space-y-4">
             <h2 className="text-3xl md:text-5xl font-bold text-balance">生成结果预览</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {hasOutputs ? "已根据字幕生成结果，可直接复制使用。" : "生成完成后会在这里展示结果示例。"}
+              {hasOutputs
+                ? "已根据字幕生成结果，可直接复制使用。"
+                : "生成完成后会在这里展示结果示例。"}
             </p>
           </div>
 
@@ -60,19 +108,41 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    X Thread（4-8 条）
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        handleCopy(
-                          threadItems.map((item) => item.text).join("\n\n") || "暂无内容",
-                          "thread"
-                        )
-                      }
-                    >
-                      {copiedId === "thread" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
+                    X Thread（5-8 条）
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCopy(threadText || "暂无内容", "thread")}
+                      >
+                        {copiedId === "thread" ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          handleDownload(
+                            threadMarkdown || threadText || "暂无内容",
+                            "x-thread.md"
+                          )
+                        }
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        MD
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDownload(threadJson, "x-thread.json")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
                   </CardTitle>
                   <CardDescription>结构化 thread，方便直接发布。</CardDescription>
                 </CardHeader>
@@ -82,10 +152,13 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
                     : [
                         { order: 1, text: "示例：如何把一个长视频拆成高互动线程？" },
                         { order: 2, text: "示例：先用一句强对比的结论做开头。" },
-                        { order: 3, text: "示例：再用 2-3 条核心要点承接。" }
+                        { order: 3, text: "示例：再用 2-3 条核心要点承接。" },
                       ]
                   ).map((item, index) => (
-                    <div key={`${item.order}-${index}`} className="flex gap-3 p-4 bg-muted/50 rounded-lg border border-border">
+                    <div
+                      key={`${item.order}-${index}`}
+                      className="flex gap-3 p-4 bg-muted/50 rounded-lg border border-border"
+                    >
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
                         {item.order || index + 1}
                       </div>
@@ -99,7 +172,43 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
             <TabsContent value="tweets" className="space-y-4 mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>X Singles（2-3 条）</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    X Singles（2-3 条）
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCopy(singlesText || "暂无内容", "singles")}
+                      >
+                        {copiedId === "singles" ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          handleDownload(
+                            singlesMarkdown || singlesText || "暂无内容",
+                            "x-singles.md"
+                          )
+                        }
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        MD
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDownload(singlesJson, "x-singles.json")}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        JSON
+                      </Button>
+                    </div>
+                  </CardTitle>
                   <CardDescription>不同角度的单条推文。</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -108,14 +217,22 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
                     : [
                         "示例：一句话总结视频核心观点。",
                         "示例：给出一个反常识观点。",
-                        "示例：列出 3 个要点。"
+                        "示例：列出 3 个要点。",
                       ]
                   ).map((tweet, i) => (
                     <div key={i} className="p-4 bg-muted/50 rounded-lg border border-border">
                       <div className="flex items-start justify-between gap-4">
                         <p className="text-sm leading-relaxed">{tweet}</p>
-                        <Button size="sm" variant="ghost" onClick={() => handleCopy(tweet, `tweet-${i}`)}>
-                          {copiedId === `tweet-${i}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleCopy(tweet, `tweet-${i}`)}
+                        >
+                          {copiedId === `tweet-${i}` ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -128,7 +245,38 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
               <div className="grid gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>标题候选（5 选）</CardTitle>
+                    <CardTitle className="flex items-center justify-between">
+                      标题候选（5 选）
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleCopy(seoMarkdown || seoJson || "暂无内容", "seo")}
+                        >
+                          {copiedId === "seo" ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDownload(seoMarkdown || "暂无内容", "youtube-seo.md")}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          MD
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDownload(seoJson, "youtube-seo.json")}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          JSON
+                        </Button>
+                      </div>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {(seo?.titles?.length
@@ -136,13 +284,17 @@ export function ResultPreviewSection({ outputs }: ResultPreviewProps) {
                       : [
                           "示例：如何把一个视频转成高互动内容？",
                           "示例：从 0 到 1 打造内容资产库",
-                          "示例：一条视频带来 10 条内容"
+                          "示例：一条视频带来 10 条内容",
                         ]
                     ).map((title, i) => (
                       <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg text-sm">
                         <span>{title}</span>
                         <Button size="sm" variant="ghost" onClick={() => handleCopy(title, `title-${i}`)}>
-                          {copiedId === `title-${i}` ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          {copiedId === `title-${i}` ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     ))}

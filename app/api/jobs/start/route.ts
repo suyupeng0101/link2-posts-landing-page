@@ -168,6 +168,39 @@ export async function POST(request: NextRequest) {
       fullText
     })
 
+    const itemsToInsert = [
+      ...outputs.x_thread.map((item) => ({
+        job_id: jobId,
+        item_type: "x_thread",
+        content: item,
+      })),
+      ...outputs.x_singles.map((item) => ({
+        job_id: jobId,
+        item_type: "x_single",
+        content: item,
+      })),
+      {
+        job_id: jobId,
+        item_type: "youtube_seo",
+        content: outputs.youtube_seo,
+      },
+    ]
+
+    const { error: itemsError } = await supabaseAdmin
+      .from("generation_job_items")
+      .insert(itemsToInsert)
+
+    if (itemsError) {
+      await supabaseAdmin
+        .from("generation_jobs")
+        .update({ status: "failed" })
+        .eq("id", jobId)
+      return NextResponse.json(
+        { error: "Failed to save outputs" },
+        { status: 500 }
+      )
+    }
+
     await supabaseAdmin
       .from("generation_jobs")
       .update({ status: "succeeded", finished_at: new Date().toISOString() })
