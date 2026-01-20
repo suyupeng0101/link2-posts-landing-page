@@ -177,7 +177,7 @@ export function HeroSection({
               一键把 YouTube 视频变成 <span className="text-primary">可发布内容资产</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
-              只需一个链接，生成 X Thread、单条推文和 YouTube SEO 元数据，直接复制发布。
+              只需一个链接，生成 X Thread、单条推文和 YouTube SEO 元数据，直接复制发布。目前仅支持带字幕的 YouTube 视频链接，且视频时长不超过 30 分钟。后续版本会持续迭代。
             </p>
           </div>
 

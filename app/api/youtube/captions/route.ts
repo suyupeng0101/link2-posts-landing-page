@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { fetchRapidApiCaptions } from "@/lib/rapidapi-transcript"
+import { fetchYoutubeTranscript, TranscriptError } from "@/lib/youtube-transcript"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 
@@ -15,21 +15,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { youtubeUrl, transcriptLanguage = "auto" } = await request.json()
-
-    if (!youtubeUrl) {
-      return NextResponse.json(
-        { error: "YouTube URL is required" },
-        { status: 400 }
-      )
-    }
-
-    const videoId = extractVideoId(youtubeUrl)
-    if (!videoId) {
-      return NextResponse.json(
-        { error: "Invalid YouTube URL" },
-        { status: 400 }
-      )
-    }
 
     const { data: creditRow, error: creditError } = await supabaseAdmin
       .from("credits_balance")
@@ -52,47 +37,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const captions = await fetchRapidApiCaptions(videoId)
-
-    if (!captions || captions.length === 0) {
-      return NextResponse.json(
-        { error: "No transcript found via RapidAPI." },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json({
-      videoId,
-      captions,
+    const result = await fetchYoutubeTranscript({
+      youtubeUrl,
       transcriptLanguage,
-      source: "rapidapi"
     })
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error("Error fetching captions:", error)
 
     let errorMessage = "Failed to fetch captions"
+    let status = 500
 
-    if (error instanceof Error) {
+    if (error instanceof TranscriptError) {
+      errorMessage = error.message
+      status = error.status
+    } else if (error instanceof Error) {
       errorMessage = error.message
     }
 
     return NextResponse.json(
       { error: errorMessage },
-      { status: 500 }
+      { status }
     )
   }
-}
-
-function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
-    /^([a-zA-Z0-9_-]{11})$/
-  ]
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match) return match[1]
-  }
-
-  return null
 }

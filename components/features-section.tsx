@@ -1,3 +1,11 @@
+/*
+ * @Description: 
+ * @Version: 1.0
+ * @Autor: pawn
+ * @Date: 2026-01-13 15:57:25
+ * @LastEditors: pawn
+ * @LastEditTime: 2026-01-20 21:53:09
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock, Link2, Copy, Share2, FileText, SlidersHorizontal } from "lucide-react"
 
@@ -17,11 +25,6 @@ export function FeaturesSection() {
       icon: SlidersHorizontal,
       title: "输出数量可配置",
       description: "Thread 条数、单条推文数量与标题候选可调整",
-    },
-    {
-      icon: Share2,
-      title: "可选分享链接",
-      description: "生成只读分享页，便于协作与审阅",
     },
     {
       icon: Link2,

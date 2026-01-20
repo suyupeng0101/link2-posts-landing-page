@@ -26,20 +26,18 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">公司</h3>
             <ul className="space-y-2 text-sm">
-              <li>
+              {/* <li>
                 <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   关于我们
                 </Link>
-              </li>
+              </li> */}
               <li>
-                <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
-                  博客
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                <a
+                  href="mailto:sujinzhe1992@gmail.com"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
                   联系我们
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -62,7 +60,7 @@ export function Footer() {
 
           <div>
             <h3 className="font-semibold mb-4">关注我们</h3>
-            <div className="flex gap-3">
+            {/* <div className="flex gap-3">
               <a
                 href="https://twitter.com"
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted hover:bg-muted-foreground/10 transition-colors"
@@ -87,7 +85,7 @@ export function Footer() {
               >
                 <Youtube className="h-4 w-4" />
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
 
