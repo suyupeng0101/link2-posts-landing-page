@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { signInWithGoogle } from "@/app/login/actions"
+import { useI18n } from "@/components/i18n-provider"
 
 type LoginDialogProps = {
   trigger: ReactNode
@@ -27,6 +28,23 @@ type LoginDialogProps = {
 
 export function LoginDialog({ trigger }: LoginDialogProps) {
   const [open, setOpen] = useState(false)
+  const { locale } = useI18n()
+  const copy =
+    locale === "zh-Hans"
+      ? {
+          title: "登录",
+          description: "选择一个账号快速开始",
+          continueWith: "使用 Google 继续",
+          provider: "Google",
+          legal: "登录即表示你同意服务条款与隐私政策",
+        }
+      : {
+          title: "Log in",
+          description: "Choose an account to get started",
+          continueWith: "Continue with Google",
+          provider: "Google",
+          legal: "By logging in, you agree to the Terms of Service and Privacy Policy",
+        }
 
   useEffect(() => {
     const handleOpen = () => setOpen(true)
@@ -38,9 +56,9 @@ export function LoginDialog({ trigger }: LoginDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md rounded-3xl border border-border/60 bg-white/95 p-6 shadow-[0_24px_80px_-45px_rgba(15,23,42,0.6)] backdrop-blur">
-        <DialogTitle className="text-lg font-semibold text-foreground">登录</DialogTitle>
+        <DialogTitle className="text-lg font-semibold text-foreground">{copy.title}</DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
-          选择一个账号快速开始
+          {copy.description}
         </DialogDescription>
         <div className="space-y-4">
           <form action={signInWithGoogle} className="w-full">
@@ -69,13 +87,13 @@ export function LoginDialog({ trigger }: LoginDialogProps) {
                     />
                   </svg>
                 </span>
-                Continue with Google
+                {copy.continueWith}
               </span>
-              <span className="text-xs font-medium text-white/80">Google</span>
+              <span className="text-xs font-medium text-white/80">{copy.provider}</span>
             </Button>
           </form>
           <p className="text-[11px] text-muted-foreground">
-            登录即表示你同意服务条款与隐私政策
+            {copy.legal}
           </p>
         </div>
       </DialogContent>

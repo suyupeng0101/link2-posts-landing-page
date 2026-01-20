@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Check, Copy, Download } from "lucide-react"
+import { useI18n } from "@/components/i18n-provider"
 
 type LedgerItem = {
   id: number
@@ -48,48 +49,139 @@ type JobDetail = {
   items: JobItem[]
 }
 
-function formatDate(value?: string | null) {
+function formatDate(value: string | null | undefined, locale: string) {
   if (!value) return "-"
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return "-"
-  return date.toLocaleString("zh-CN")
+  return date.toLocaleString(locale)
 }
 
-function formatReason(reason: string) {
+function formatReason(reason: string, locale: string) {
+  const zh = locale.startsWith("zh")
   switch (reason) {
     case "payment":
-      return "充值"
+      return zh ? "充值" : "Top up"
     case "generation":
-      return "生成"
+      return zh ? "生成" : "Generation"
     case "signup":
-      return "注册赠送"
+      return zh ? "注册赠送" : "Signup bonus"
     case "invite":
-      return "邀请"
+      return zh ? "邀请" : "Invite bonus"
     case "admin":
-      return "后台调整"
+      return zh ? "后台调整" : "Admin adjustment"
     case "refund":
-      return "退款"
+      return zh ? "退款" : "Refund"
     default:
       return reason
   }
 }
 
-function formatJobStatus(status: string) {
+function formatJobStatus(status: string, locale: string) {
+  const zh = locale.startsWith("zh")
   switch (status) {
     case "queued":
-      return "排队中"
+      return zh ? "排队中" : "Queued"
     case "running":
-      return "生成中"
+      return zh ? "生成中" : "Running"
     case "succeeded":
-      return "已完成"
+      return zh ? "已完成" : "Completed"
     case "failed":
-      return "失败"
+      return zh ? "失败" : "Failed"
     default:
       return status
   }
 }
 
+function formatOutputLanguage(value: string | null | undefined, locale: string) {
+  if (!value) return "-"
+  if (value.toLowerCase().startsWith("zh")) return locale.startsWith("zh") ? "简体中文" : "Chinese"
+  return "English"
+}
+
 export default function ProfileClient() {
+  const { locale } = useI18n()
+  const copy = useMemo(
+    () =>
+      locale === "zh-Hans"
+        ? {
+          title: "个人中心",
+          subtitle: "查看积分余额、充值消费记录与生成历史。",
+          refresh: "刷新数据",
+          refreshing: "加载中...",
+          topUp: "充值积分",
+          currentCredits: "当前积分",
+          fetchBalance: "点击刷新获取",
+          tabsLedger: "积分流水",
+          tabsJobs: "生成记录",
+          ledgerTitle: "充值与消费记录",
+          emptyRecords: "暂无记录",
+          noNote: "无备注",
+          jobsTitle: "生成记录",
+          jobFallback: "YouTube 生成",
+          creditsSpent: "消耗",
+          outputLanguage: "输出",
+          detailTitle: "资源包详情",
+          selectJob: "选择一条生成记录查看资源包。",
+          status: "状态",
+          createdAt: "生成时间",
+          openSource: "打开原视频链接",
+          tabThread: "X Thread",
+          tabSingles: "X 单条推文",
+          tabSeo: "YouTube SEO",
+          emptyContent: "暂无内容",
+          seoTitles: "标题候选",
+          seoDescription: "描述",
+          seoChapters: "章节",
+          seoTags: "标签",
+          errorBalance: "余额获取失败",
+          errorLedger: "流水获取失败",
+          errorJobs: "生成记录获取失败",
+          errorLoad: "加载失败",
+          errorAssets: "获取资源包失败",
+          errorCopy: "复制失败，请手动复制",
+          creditsUnit: "积分",
+        }
+        : {
+          title: "Profile",
+          subtitle: "View credit balance, top-ups, and generation history.",
+          refresh: "Refresh",
+          refreshing: "Loading...",
+          topUp: "Top up credits",
+          currentCredits: "Current credits",
+          fetchBalance: "Click refresh to fetch",
+          tabsLedger: "Credit ledger",
+          tabsJobs: "Generation history",
+          ledgerTitle: "Top-ups and usage",
+          emptyRecords: "No records",
+          noNote: "No notes",
+          jobsTitle: "Generation history",
+          jobFallback: "YouTube generation",
+          creditsSpent: "Spent",
+          outputLanguage: "Output",
+          detailTitle: "Asset details",
+          selectJob: "Select a generation to view assets.",
+          status: "Status",
+          createdAt: "Created at",
+          openSource: "Open source video",
+          tabThread: "X Thread",
+          tabSingles: "X Singles",
+          tabSeo: "YouTube SEO",
+          emptyContent: "No content yet",
+          seoTitles: "Title candidates",
+          seoDescription: "Description",
+          seoChapters: "Chapters",
+          seoTags: "Tags",
+          errorBalance: "Failed to fetch balance",
+          errorLedger: "Failed to fetch ledger",
+          errorJobs: "Failed to fetch jobs",
+          errorLoad: "Failed to load",
+          errorAssets: "Failed to fetch assets",
+          errorCopy: "Copy failed, please copy manually",
+          creditsUnit: "credits",
+        },
+    [locale]
+  )
+
   const [balance, setBalance] = useState<number | null>(null)
   const [ledger, setLedger] = useState<LedgerItem[]>([])
   const [jobs, setJobs] = useState<JobSummary[]>([])
@@ -97,6 +189,8 @@ export default function ProfileClient() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const localeString = locale === "zh-Hans" ? "zh-CN" : "en-US"
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
@@ -113,52 +207,58 @@ export default function ProfileClient() {
       const ledgerData = await ledgerRes.json()
       const jobsData = await jobsRes.json()
 
-      if (!balanceRes.ok) throw new Error(balanceData?.error || "余额获取失败")
-      if (!ledgerRes.ok) throw new Error(ledgerData?.error || "流水获取失败")
-      if (!jobsRes.ok) throw new Error(jobsData?.error || "生成记录获取失败")
+      if (!balanceRes.ok) throw new Error(balanceData?.error || copy.errorBalance)
+      if (!ledgerRes.ok) throw new Error(ledgerData?.error || copy.errorLedger)
+      if (!jobsRes.ok) throw new Error(jobsData?.error || copy.errorJobs)
 
       setBalance(balanceData.balance ?? 0)
       setLedger(Array.isArray(ledgerData.items) ? ledgerData.items : [])
       setJobs(Array.isArray(jobsData.items) ? jobsData.items : [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "加载失败")
+      setError(err instanceof Error ? err.message : copy.errorLoad)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [copy.errorBalance, copy.errorJobs, copy.errorLedger, copy.errorLoad])
 
   useEffect(() => {
     fetchAll()
   }, [fetchAll])
 
-  const fetchJobDetail = useCallback(async (jobId: number) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await fetch(`/api/generation/jobs/${jobId}`, {
-        cache: "no-store",
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data?.error || "获取资源包失败")
+  const fetchJobDetail = useCallback(
+    async (jobId: number) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch(`/api/generation/jobs/${jobId}`, {
+          cache: "no-store",
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data?.error || copy.errorAssets)
+        }
+        setSelectedJob(data as JobDetail)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : copy.errorAssets)
+      } finally {
+        setLoading(false)
       }
-      setSelectedJob(data as JobDetail)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "获取资源包失败")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    [copy.errorAssets]
+  )
 
-  const handleCopy = useCallback(async (content: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(content)
-      setCopiedId(id)
-      setTimeout(() => setCopiedId(null), 2000)
-    } catch {
-      setError("复制失败，请手动复制")
-    }
-  }, [])
+  const handleCopy = useCallback(
+    async (content: string, id: string) => {
+      try {
+        await navigator.clipboard.writeText(content)
+        setCopiedId(id)
+        setTimeout(() => setCopiedId(null), 2000)
+      } catch {
+        setError(copy.errorCopy)
+      }
+    },
+    [copy.errorCopy]
+  )
 
   const handleDownload = useCallback((content: string, filename: string) => {
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
@@ -235,23 +335,28 @@ export default function ProfileClient() {
       : ""
     const tags = seo.tags?.length ? seo.tags.map((tag) => `#${tag}`).join(" ") : ""
 
+    const seoHeadings =
+      locale === "zh-Hans"
+        ? ["## YouTube SEO", "### 标题候选", "### 描述", "### 章节", "### 标签"]
+        : ["## YouTube SEO", "### Title candidates", "### Description", "### Chapters", "### Tags"]
+
     return [
-      "## YouTube SEO",
+      seoHeadings[0],
       "",
-      "### 标题候选",
+      seoHeadings[1],
       titles || "-",
       "",
-      "### 描述",
+      seoHeadings[2],
       seo.description || "-",
       "",
-      "### 章节",
+      seoHeadings[3],
       chapters || "-",
       "",
-      "### 标签",
+      seoHeadings[4],
       tags || "-",
       "",
     ].join("\n")
-  }, [seo])
+  }, [locale, seo])
 
   const threadJson = useMemo(
     () => JSON.stringify(threadItems, null, 2),
@@ -272,17 +377,15 @@ export default function ProfileClient() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">个人中心</h1>
-          <p className="text-sm text-muted-foreground">
-            查看积分余额、充值/消费记录与生成历史。
-          </p>
+          <h1 className="text-2xl font-semibold">{copy.title}</h1>
+          <p className="text-sm text-muted-foreground">{copy.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button onClick={fetchAll} disabled={loading}>
-            {loading ? "加载中..." : "刷新数据"}
+            {loading ? copy.refreshing : copy.refresh}
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/pricing">充值积分</Link>
+            <Link href="/pricing">{copy.topUp}</Link>
           </Button>
         </div>
       </div>
@@ -295,27 +398,27 @@ export default function ProfileClient() {
 
       <Card className="border-border">
         <CardHeader>
-          <CardTitle>当前积分</CardTitle>
+          <CardTitle>{copy.currentCredits}</CardTitle>
         </CardHeader>
         <CardContent className="text-3xl font-semibold">
-          {balance === null ? "点击刷新获取" : `${balance} credits`}
+          {balance === null ? copy.fetchBalance : `${balance} ${copy.creditsUnit}`}
         </CardContent>
       </Card>
 
       <Tabs defaultValue="ledger">
         <TabsList>
-          <TabsTrigger value="ledger">积分流水</TabsTrigger>
-          <TabsTrigger value="jobs">生成记录</TabsTrigger>
+          <TabsTrigger value="ledger">{copy.tabsLedger}</TabsTrigger>
+          <TabsTrigger value="jobs">{copy.tabsJobs}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ledger" className="mt-4">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>充值与消费记录</CardTitle>
+              <CardTitle>{copy.ledgerTitle}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               {ledger.length === 0 ? (
-                <div className="text-muted-foreground">暂无记录</div>
+                <div className="text-muted-foreground">{copy.emptyRecords}</div>
               ) : (
                 ledger.map((item) => (
                   <div
@@ -336,15 +439,15 @@ export default function ProfileClient() {
                           {item.change_amount}
                         </Badge>
                         <span className="font-medium">
-                          {formatReason(item.reason)}
+                          {formatReason(item.reason, localeString)}
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {item.note || "无备注"}
+                        {item.note || copy.noNote}
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {formatDate(item.created_at)}
+                      {formatDate(item.created_at, localeString)}
                     </div>
                   </div>
                 ))
@@ -357,11 +460,11 @@ export default function ProfileClient() {
           <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
             <Card className="border-border">
               <CardHeader>
-                <CardTitle>生成记录</CardTitle>
+                <CardTitle>{copy.jobsTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 {jobs.length === 0 ? (
-                  <div className="text-muted-foreground">暂无记录</div>
+                  <div className="text-muted-foreground">{copy.emptyRecords}</div>
                 ) : (
                   jobs.map((job) => (
                     <button
@@ -376,17 +479,21 @@ export default function ProfileClient() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="font-medium">
-                          {job.video_id || "YouTube 生成"}
+                          {job.video_id || copy.jobFallback}
                         </div>
                         <Badge variant="outline">
-                          {formatJobStatus(job.status)}
+                          {formatJobStatus(job.status, localeString)}
                         </Badge>
                       </div>
                       <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>消耗 {job.credits_spent} credits</span>
-                        <span>{formatDate(job.created_at)}</span>
+                        <span>
+                          {copy.creditsSpent} {job.credits_spent} {copy.creditsUnit}
+                        </span>
+                        <span>{formatDate(job.created_at, localeString)}</span>
                         {job.output_language && (
-                          <span>输出：{job.output_language}</span>
+                          <span>
+                            {copy.outputLanguage}：{formatOutputLanguage(job.output_language, localeString)}
+                          </span>
                         )}
                       </div>
                     </button>
@@ -397,18 +504,20 @@ export default function ProfileClient() {
 
             <Card className="border-border">
               <CardHeader>
-                <CardTitle>资源包详情</CardTitle>
+                <CardTitle>{copy.detailTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 {!selectedJob ? (
-                  <div className="text-muted-foreground">
-                    选择一条生成记录查看资源包。
-                  </div>
+                  <div className="text-muted-foreground">{copy.selectJob}</div>
                 ) : (
                   <>
                     <div className="space-y-1 text-xs text-muted-foreground">
-                      <div>状态：{formatJobStatus(selectedJob.job.status)}</div>
-                      <div>生成时间：{formatDate(selectedJob.job.created_at)}</div>
+                      <div>
+                        {copy.status}：{formatJobStatus(selectedJob.job.status, localeString)}
+                      </div>
+                      <div>
+                        {copy.createdAt}：{formatDate(selectedJob.job.created_at, localeString)}
+                      </div>
                       {selectedJob.job.youtube_url && (
                         <a
                           href={selectedJob.job.youtube_url}
@@ -416,27 +525,27 @@ export default function ProfileClient() {
                           rel="noreferrer"
                           className="text-primary hover:underline"
                         >
-                          打开原视频链接
+                          {copy.openSource}
                         </a>
                       )}
                     </div>
 
                     <Tabs defaultValue="thread">
                       <TabsList className="grid w-full grid-cols-3 h-auto">
-                        <TabsTrigger value="thread">X Thread</TabsTrigger>
-                        <TabsTrigger value="singles">X 单条推文</TabsTrigger>
-                        <TabsTrigger value="seo">YouTube SEO</TabsTrigger>
+                        <TabsTrigger value="thread">{copy.tabThread}</TabsTrigger>
+                        <TabsTrigger value="singles">{copy.tabSingles}</TabsTrigger>
+                        <TabsTrigger value="seo">{copy.tabSeo}</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="thread" className="space-y-4 mt-4">
                         <div className="flex items-center justify-between">
-                          <div className="font-medium">X Thread</div>
+                          <div className="font-medium">{copy.tabThread}</div>
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                handleCopy(threadText || "暂无内容", "thread-copy")
+                                handleCopy(threadText || copy.emptyContent, "thread-copy")
                               }
                             >
                               {copiedId === "thread-copy" ? (
@@ -450,7 +559,7 @@ export default function ProfileClient() {
                               variant="ghost"
                               onClick={() =>
                                 handleDownload(
-                                  threadMarkdown || threadText || "暂无内容",
+                                  threadMarkdown || threadText || copy.emptyContent,
                                   "x-thread.md"
                                 )
                               }
@@ -470,7 +579,7 @@ export default function ProfileClient() {
                         </div>
                         <div className="space-y-3">
                           {threadItems.length === 0 ? (
-                            <div className="text-muted-foreground">暂无内容</div>
+                            <div className="text-muted-foreground">{copy.emptyContent}</div>
                           ) : (
                             threadItems.map((item, index) => (
                               <div
@@ -489,13 +598,13 @@ export default function ProfileClient() {
 
                       <TabsContent value="singles" className="space-y-4 mt-4">
                         <div className="flex items-center justify-between">
-                          <div className="font-medium">X 单条推文</div>
+                          <div className="font-medium">{copy.tabSingles}</div>
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                handleCopy(singlesText || "暂无内容", "singles-copy")
+                                handleCopy(singlesText || copy.emptyContent, "singles-copy")
                               }
                             >
                               {copiedId === "singles-copy" ? (
@@ -509,7 +618,7 @@ export default function ProfileClient() {
                               variant="ghost"
                               onClick={() =>
                                 handleDownload(
-                                  singlesMarkdown || singlesText || "暂无内容",
+                                  singlesMarkdown || singlesText || copy.emptyContent,
                                   "x-singles.md"
                                 )
                               }
@@ -529,7 +638,7 @@ export default function ProfileClient() {
                         </div>
                         <div className="space-y-3">
                           {singleItems.length === 0 ? (
-                            <div className="text-muted-foreground">暂无内容</div>
+                            <div className="text-muted-foreground">{copy.emptyContent}</div>
                           ) : (
                             singleItems.map((item, index) => (
                               <div
@@ -545,13 +654,13 @@ export default function ProfileClient() {
 
                       <TabsContent value="seo" className="space-y-4 mt-4">
                         <div className="flex items-center justify-between">
-                          <div className="font-medium">YouTube SEO</div>
+                          <div className="font-medium">{copy.tabSeo}</div>
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                handleCopy(seoMarkdown || seoJson || "暂无内容", "seo-copy")
+                                handleCopy(seoMarkdown || seoJson || copy.emptyContent, "seo-copy")
                               }
                             >
                               {copiedId === "seo-copy" ? (
@@ -564,7 +673,7 @@ export default function ProfileClient() {
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                handleDownload(seoMarkdown || "暂无内容", "youtube-seo.md")
+                                handleDownload(seoMarkdown || copy.emptyContent, "youtube-seo.md")
                               }
                             >
                               <Download className="h-4 w-4 mr-1" />
@@ -584,10 +693,10 @@ export default function ProfileClient() {
                         {seo ? (
                           <div className="space-y-4">
                             <div className="space-y-2">
-                              <div className="text-xs text-muted-foreground">标题候选</div>
+                              <div className="text-xs text-muted-foreground">{copy.seoTitles}</div>
                               <div className="space-y-2">
                                 {(seo.titles ?? []).length === 0 ? (
-                                  <div className="text-muted-foreground">暂无内容</div>
+                                  <div className="text-muted-foreground">{copy.emptyContent}</div>
                                 ) : (
                                   seo.titles?.map((title, index) => (
                                     <div
@@ -602,17 +711,17 @@ export default function ProfileClient() {
                             </div>
 
                             <div className="space-y-2">
-                              <div className="text-xs text-muted-foreground">描述</div>
+                              <div className="text-xs text-muted-foreground">{copy.seoDescription}</div>
                               <p className="text-sm leading-relaxed bg-muted/50 p-4 rounded-lg">
-                                {seo.description || "暂无内容"}
+                                {seo.description || copy.emptyContent}
                               </p>
                             </div>
 
                             <div className="space-y-2">
-                              <div className="text-xs text-muted-foreground">章节</div>
+                              <div className="text-xs text-muted-foreground">{copy.seoChapters}</div>
                               <div className="space-y-1 text-sm font-mono bg-muted/50 p-4 rounded-lg">
                                 {(seo.chapters ?? []).length === 0 ? (
-                                  <div className="text-muted-foreground">暂无内容</div>
+                                  <div className="text-muted-foreground">{copy.emptyContent}</div>
                                 ) : (
                                   seo.chapters?.map((chapter, index) => (
                                     <div key={`${chapter.timestamp}-${index}`}>
@@ -624,10 +733,10 @@ export default function ProfileClient() {
                             </div>
 
                             <div className="space-y-2">
-                              <div className="text-xs text-muted-foreground">标签</div>
+                              <div className="text-xs text-muted-foreground">{copy.seoTags}</div>
                               <div className="flex flex-wrap gap-2">
                                 {(seo.tags ?? []).length === 0 ? (
-                                  <div className="text-muted-foreground">暂无内容</div>
+                                  <div className="text-muted-foreground">{copy.emptyContent}</div>
                                 ) : (
                                   seo.tags?.map((tag) => (
                                     <span
@@ -642,7 +751,7 @@ export default function ProfileClient() {
                             </div>
                           </div>
                         ) : (
-                          <div className="text-muted-foreground">暂无内容</div>
+                          <div className="text-muted-foreground">{copy.emptyContent}</div>
                         )}
                       </TabsContent>
                     </Tabs>

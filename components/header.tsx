@@ -15,6 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { LoginDialog } from "@/components/login-dialog"
+import { useI18n } from "@/components/i18n-provider"
+import { localeLabels } from "@/lib/i18n"
+import { Check, Globe } from "lucide-react"
 
 type AuthUser = {
   id: string
@@ -29,6 +32,30 @@ export function Header() {
   const pathname = usePathname()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { locale, setLocale } = useI18n()
+
+  const copy =
+    locale === "zh-Hans"
+      ? {
+          guest: "访客",
+          signedIn: "已登录用户",
+          navFeatures: "功能",
+          navFaq: "常见问题",
+          login: "登录",
+          profile: "个人资料",
+          signOut: "退出登录",
+          cta: "立即开始",
+        }
+      : {
+          guest: "Guest",
+          signedIn: "Signed-in user",
+          navFeatures: "Features",
+          navFaq: "FAQ",
+          login: "Log in",
+          profile: "Profile",
+          signOut: "Sign out",
+          cta: "Get started",
+        }
 
   useEffect(() => {
     let isMounted = true
@@ -59,9 +86,9 @@ export function Header() {
   }, [])
 
   const displayName = useMemo(() => {
-    if (!user) return "访客"
-    return user.user_metadata?.full_name || user.email || "已登录用户"
-  }, [user])
+    if (!user) return copy.guest
+    return user.user_metadata?.full_name || user.email || copy.signedIn
+  }, [user, copy])
 
   const avatarFallback = useMemo(() => {
     if (!user) return "U"
@@ -96,22 +123,40 @@ export function Header() {
             href={homeAnchor("#features")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            功能
+            {copy.navFeatures}
           </Link>
           <Link
             href={homeAnchor("#faq")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            常见问题
+            {copy.navFaq}
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Globe className="h-4 w-4" />
+                <span>{localeLabels[locale]}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              {(["en", "zh-Hans"] as const).map((value) => (
+                <DropdownMenuItem key={value} onClick={() => setLocale(value)}>
+                  <span className="flex w-full items-center justify-between">
+                    {localeLabels[value]}
+                    {locale === value ? <Check className="h-4 w-4" /> : null}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {!isLoading && !user ? (
             <LoginDialog
               trigger={
                 <Button variant="ghost" size="sm">
-                  登录
+                  {copy.login}
                 </Button>
               }
             />
@@ -137,14 +182,14 @@ export function Header() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">个人资料</Link>
+                  <Link href="/profile">{copy.profile}</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>退出登录</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>{copy.signOut}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
           <Link href={homeAnchor("#hero")}>
-            <Button size="sm">立即开始</Button>
+            <Button size="sm">{copy.cta}</Button>
           </Link>
         </div>
       </div>

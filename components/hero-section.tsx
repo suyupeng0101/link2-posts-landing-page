@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/select"
 import { GlobeIcon, LinkIcon, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { LoginDialog } from "@/components/login-dialog"
 import { openLoginDialog } from "@/lib/login-dialog"
+import { useI18n } from "@/components/i18n-provider"
+import { formatMessage } from "@/lib/i18n"
 
 interface CaptionSegment {
   start: number
@@ -69,6 +70,56 @@ export function HeroSection({
   const [captions, setCaptions] = useState<CaptionSegment[] | null>(null)
   const [videoId, setVideoId] = useState<string | null>(null)
   const [showAllCaptions, setShowAllCaptions] = useState(false)
+  const { locale } = useI18n()
+
+  const copy =
+    locale === "zh-Hans"
+      ? {
+          titleLead: "一键把 YouTube 视频变成",
+          titleHighlight: "可发布内容资产",
+          description:
+            "只需一个链接，生成 X Thread、单条推文和 YouTube SEO 元数据，直接复制发布。目前仅支持带字幕的 YouTube 视频链接，且视频时长不超过 30 分钟。后续版本会持续迭代。",
+          youtubeLink: "YouTube 链接",
+          languageSettings: "语言设置",
+          transcriptLanguage: "字幕语言",
+          autoDetect: "自动识别",
+          outputLanguage: "输出语言",
+          outputLanguagePlaceholder: "选择输出语言",
+          outputHint: "输出语言默认 English，可切换为简体中文。",
+          captionsExtracted: "字幕已提取（{count} 段）",
+          videoId: "Video ID: {id}",
+          collapseCaptions: "收起字幕",
+          expandCaptions: "... 还有 {count} 段字幕，点击查看全部",
+          loginPrompt: "请先进行登录",
+          generateLoading: "生成中...",
+          generateCta: "开始生成",
+          viewExample: "查看示例",
+          recharge: "充值积分",
+          processingHint: "无需绑卡；多数视频处理时间在 2 分钟内。",
+        }
+      : {
+          titleLead: "Turn any YouTube video into",
+          titleHighlight: "publishable assets",
+          description:
+            "Paste a link to generate X Threads, single posts, and YouTube SEO metadata, ready to copy. Currently supports only YouTube videos with captions and up to 30 minutes. We will keep iterating in future releases.",
+          youtubeLink: "YouTube link",
+          languageSettings: "Language settings",
+          transcriptLanguage: "Caption language",
+          autoDetect: "Auto detect",
+          outputLanguage: "Output language",
+          outputLanguagePlaceholder: "Select output language",
+          outputHint: "Default output language is English; you can switch to Simplified Chinese.",
+          captionsExtracted: "Captions extracted ({count} segments)",
+          videoId: "Video ID: {id}",
+          collapseCaptions: "Collapse captions",
+          expandCaptions: "... {count} more segments, click to view all",
+          loginPrompt: "Please sign in first",
+          generateLoading: "Generating...",
+          generateCta: "Generate",
+          viewExample: "View example",
+          recharge: "Top up credits",
+          processingHint: "No card required; most videos finish within 2 minutes.",
+        }
 
   const ensureAuthenticated = async () => {
     try {
@@ -174,10 +225,10 @@ export function HeroSection({
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
-              一键把 YouTube 视频变成 <span className="text-primary">可发布内容资产</span>
+              {copy.titleLead} <span className="text-primary">{copy.titleHighlight}</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
-              只需一个链接，生成 X Thread、单条推文和 YouTube SEO 元数据，直接复制发布。目前仅支持带字幕的 YouTube 视频链接，且视频时长不超过 30 分钟。后续版本会持续迭代。
+              {copy.description}
             </p>
           </div>
 
@@ -186,7 +237,7 @@ export function HeroSection({
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <LinkIcon className="h-4 w-4" />
-                  YouTube 链接
+                  {copy.youtubeLink}
                 </label>
                 <Input
                   type="url"
@@ -200,39 +251,39 @@ export function HeroSection({
               <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <GlobeIcon className="h-4 w-4" />
-                  语言设置
+                  {copy.languageSettings}
                 </div>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">
-                      字幕语言
+                      {copy.transcriptLanguage}
                     </label>
                     <Select value={transcriptLanguage} onValueChange={() => {}} disabled>
                       <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="自动识别" />
+                        <SelectValue placeholder={copy.autoDetect} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="auto">自动识别</SelectItem>
+                        <SelectItem value="auto">{copy.autoDetect}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">
-                      输出语言
+                      {copy.outputLanguage}
                     </label>
                     <Select value={outputLanguage} onValueChange={setOutputLanguage}>
                       <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="选择输出语言" />
+                        <SelectValue placeholder={copy.outputLanguagePlaceholder} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="zh-Hans">Chinese</SelectItem>
+                        <SelectItem value="zh-Hans">简体中文</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  输出语言默认 English，可切换为 Chinese。
+                  {copy.outputHint}
                 </p>
               </div>
             </div>
@@ -247,9 +298,11 @@ export function HeroSection({
               <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium">
-                    字幕已提取（{captions.length} 段）
+                    {formatMessage(copy.captionsExtracted, { count: captions.length })}
                   </span>
-                  <span className="text-xs text-muted-foreground">Video ID: {videoId}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatMessage(copy.videoId, { id: videoId ?? "" })}
+                  </span>
                 </div>
                 <div
                   className={`space-y-2 ${
@@ -276,8 +329,8 @@ export function HeroSection({
                     onClick={() => setShowAllCaptions((prev) => !prev)}
                   >
                     {showAllCaptions
-                      ? "收起字幕"
-                      : `... 还有 ${captions.length - 6} 段字幕，点击查看全部`}
+                      ? copy.collapseCaptions
+                      : formatMessage(copy.expandCaptions, { count: captions.length - 6 })}
                   </button>
                 )}
               </div>
@@ -286,7 +339,7 @@ export function HeroSection({
             {showLoginPrompt && (
               <Alert className="bg-accent/10 border-accent">
                 <AlertDescription className="flex items-center justify-between">
-                  <span className="text-sm">请先进行登录</span>
+                  <span className="text-sm">{copy.loginPrompt}</span>
                 </AlertDescription>
               </Alert>
             )}
@@ -301,10 +354,10 @@ export function HeroSection({
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中...
+                    {copy.generateLoading}
                   </>
                 ) : (
-                  "开始生成"
+                  copy.generateCta
                 )}
               </Button>
               <Button
@@ -313,7 +366,7 @@ export function HeroSection({
                 className="flex-1 h-12 text-base border-slate-300 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900"
                 asChild
               >
-                <a href="#result-preview">查看示例</a>
+                <a href="#result-preview">{copy.viewExample}</a>
               </Button>
               <Button
                 size="lg"
@@ -321,13 +374,13 @@ export function HeroSection({
                 className="flex-1 h-12 text-base bg-emerald-600 text-white hover:bg-emerald-500"
                 onClick={handleRechargeClick}
               >
-                充值积分
+                {copy.recharge}
               </Button>
             </div>
           </div>
 
           <p className="text-sm text-muted-foreground">
-            无需绑卡；多数视频处理时间在 2 分钟内。
+            {copy.processingHint}
           </p>
         </div>
       </div>

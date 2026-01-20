@@ -1,30 +1,60 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
-import { Twitter, Github, Linkedin, Youtube } from "lucide-react"
+import { useI18n } from "@/components/i18n-provider"
 
 export function Footer() {
+  const { locale } = useI18n()
+  const copy =
+    locale === "zh-Hans"
+      ? {
+          product: "产品",
+          company: "公司",
+          legal: "法律",
+          follow: "关注我们",
+          features: "功能",
+          faq: "常见问题",
+          contact: "联系我们",
+          terms: "服务条款",
+          privacy: "隐私政策",
+          rights: "保留所有权利。",
+        }
+      : {
+          product: "Product",
+          company: "Company",
+          legal: "Legal",
+          follow: "Follow",
+          features: "Features",
+          faq: "FAQ",
+          contact: "Contact",
+          terms: "Terms of Service",
+          privacy: "Privacy Policy",
+          rights: "All rights reserved.",
+        }
+
   return (
     <footer className="border-t border-border bg-muted/30">
       <div className="container py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="font-semibold mb-4">产品</h3>
+            <h3 className="font-semibold mb-4">{copy.product}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-                  功能
+                  {copy.features}
                 </Link>
               </li>
               <li>
                 <Link href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">
-                  常见问题
+                  {copy.faq}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">公司</h3>
+            <h3 className="font-semibold mb-4">{copy.company}</h3>
             <ul className="space-y-2 text-sm">
               {/* <li>
                 <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -36,30 +66,30 @@ export function Footer() {
                   href="mailto:sujinzhe1992@gmail.com"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  联系我们
+                  {copy.contact}
                 </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">法律</h3>
+            <h3 className="font-semibold mb-4">{copy.legal}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                  服务条款
+                  {copy.terms}
                 </Link>
               </li>
               <li>
                 <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                  隐私政策
+                  {copy.privacy}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4">关注我们</h3>
+            <h3 className="font-semibold mb-4">{copy.follow}</h3>
             {/* <div className="flex gap-3">
               <a
                 href="https://twitter.com"
@@ -100,7 +130,9 @@ export function Footer() {
             />
             <span className="font-semibold">Link2Posts</span>
           </div>
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Link2Posts. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Link2Posts. {copy.rights}
+          </p>
         </div>
       </div>
     </footer>

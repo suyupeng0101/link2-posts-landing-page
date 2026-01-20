@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n-provider"
 
 type RechargePlan = {
   id: string
@@ -20,38 +21,120 @@ type RechargePlan = {
   tagline: string
 }
 
-const plans: RechargePlan[] = [
-  {
-    id: "lite",
-    title: "轻量包",
-    price: 10,
-    currency: "USD",
-    credits: 100,
-    tagline: "适合体验与低频使用",
-  },
-  {
-    id: "value",
-    title: "进阶包",
-    price: 50,
-    currency: "USD",
-    credits: 500,
-    bonus: 25,
-    tagline: "主力选择，含 5% 赠送",
-  },
-  {
-    id: "pro",
-    title: "高频包",
-    price: 100,
-    currency: "USD",
-    credits: 1000,
-    bonus: 80,
-    tagline: "高频创作场景，含 8% 赠送",
-  },
-]
-
 type PayPalStatus = "idle" | "processing" | "success" | "error"
 
 export default function PricingPage() {
+  const { locale } = useI18n()
+  const copy = useMemo(
+    () =>
+      locale === "zh-Hans"
+        ? {
+          backHome: "返回首页",
+          title: "充值获取积分",
+          subtitle:
+            "选择合适的充值包，通过 PayPal 完成支付后即可获得对应积分，按量包长期有效。",
+          planLabel: "充值包",
+          creditsLabel: "到账积分",
+          amountLabel: "应付金额",
+          creditNote: "单次生成：12 credits（含转录与生成）",
+          paypalSupport: "支持 PayPal 余额或绑定卡支付",
+          orderTitle: "订单概览",
+          paypalTitle: "PayPal 支付",
+          paypalMissing: "未检测到 PayPal Client ID，请先配置环境变量。",
+          paypalProcessing: "支付处理中，请稍候确认结果。",
+          paypalSuccess: "支付成功，已充值 {credits} 积分",
+          paypalError: "支付异常，请稍后重试",
+          paypalConfirmError: "支付确认失败",
+          paypalCreateError: "创建订单失败",
+          paypalSecure: "支付由 PayPal 安全处理，本站不保存任何卡信息。",
+          usd: "USD",
+          bonusLabel: "包含 {bonus} 积分赠送",
+          creditsUnit: "积分",
+          plans: [
+            {
+              id: "lite",
+              title: "轻量包",
+              price: 10,
+              currency: "USD",
+              credits: 100,
+              tagline: "适合体验与低频使用",
+            },
+            {
+              id: "value",
+              title: "进阶包",
+              price: 50,
+              currency: "USD",
+              credits: 500,
+              bonus: 25,
+              tagline: "主力选择，含 5% 赠送",
+            },
+            {
+              id: "pro",
+              title: "高频包",
+              price: 100,
+              currency: "USD",
+              credits: 1000,
+              bonus: 80,
+              tagline: "高频创作场景，含 8% 赠送",
+            },
+          ],
+        }
+        : {
+          backHome: "Back to home",
+          title: "Top up credits",
+          subtitle:
+            "Choose a plan and pay with PayPal to receive credits. Top-ups never expire.",
+          planLabel: "Plan",
+          creditsLabel: "Credits",
+          amountLabel: "Amount due",
+          creditNote: "Per generation: 12 credits (includes transcription + generation)",
+          paypalSupport: "Pay with PayPal balance or linked card",
+          orderTitle: "Order summary",
+          paypalTitle: "PayPal checkout",
+          paypalMissing: "Missing PayPal Client ID. Please configure the environment variable.",
+          paypalProcessing: "Processing payment, please wait for confirmation.",
+          paypalSuccess: "Payment successful, {credits} credits added",
+          paypalError: "Payment error, please try again later.",
+          paypalConfirmError: "Payment confirmation failed",
+          paypalCreateError: "Failed to create order",
+          paypalSecure: "Payments are processed by PayPal. We do not store card details.",
+          usd: "USD",
+          bonusLabel: "Includes {bonus} bonus credits",
+          creditsUnit: "credits",
+          plans: [
+            {
+              id: "lite",
+              title: "Lite",
+              price: 10,
+              currency: "USD",
+              credits: 100,
+              tagline: "Best for trying it out",
+            },
+            {
+              id: "value",
+              title: "Value",
+              price: 50,
+              currency: "USD",
+              credits: 500,
+              bonus: 25,
+              tagline: "Most popular, includes 5% bonus",
+            },
+            {
+              id: "pro",
+              title: "Pro",
+              price: 100,
+              currency: "USD",
+              credits: 1000,
+              bonus: 80,
+              tagline: "For high-volume workflows, includes 8% bonus",
+            },
+          ],
+        },
+    [locale]
+  )
+
+  const plans: RechargePlan[] = copy.plans
+
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
   const [selectedId, setSelectedId] = useState(plans[1]?.id ?? plans[0].id)
   const [status, setStatus] = useState<PayPalStatus>("idle")
@@ -62,7 +145,7 @@ export default function PricingPage() {
 
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.id === selectedId) ?? plans[0],
-    [selectedId]
+    [selectedId, plans]
   )
 
   useEffect(() => {
@@ -92,7 +175,7 @@ export default function PricingPage() {
         })
         const data = await response.json()
         if (!response.ok) {
-          throw new Error(data?.error || "创建订单失败")
+          throw new Error(data?.error || copy.paypalCreateError)
         }
         return data.id
       },
@@ -100,7 +183,7 @@ export default function PricingPage() {
         if (!data.orderID) return
         const plan = selectedPlanRef.current
         setStatus("processing")
-        setMessage("支付处理中，请稍候确认结果")
+        setMessage(copy.paypalProcessing)
         const response = await fetch("/api/paypal/capture-order", {
           method: "POST",
           headers: {
@@ -110,14 +193,18 @@ export default function PricingPage() {
         })
         const capture = await response.json()
         if (!response.ok) {
-          throw new Error(capture?.error || "支付确认失败")
+          throw new Error(capture?.error || copy.paypalConfirmError)
         }
-          setStatus("success")
-        setMessage(`支付成功，已充值 ${plan.credits + (plan.bonus ?? 0)} 积分`)
+        setStatus("success")
+        setMessage(
+          copy.paypalSuccess.replace(
+            "{credits}",
+            String(plan.credits + (plan.bonus ?? 0))
+          )
+        )
       },
       onError: (err: unknown) => {
-        const errorMessage =
-          err instanceof Error ? err.message : "支付异常，请稍后重试"
+        const errorMessage = err instanceof Error ? err.message : copy.paypalError
         setStatus("error")
         setMessage(errorMessage)
       },
@@ -128,7 +215,7 @@ export default function PricingPage() {
     return () => {
       buttons.close?.()
     }
-  }, [sdkReady, clientId])
+  }, [sdkReady, clientId, copy])
 
   return (
     <div className="min-h-screen">
@@ -140,16 +227,14 @@ export default function PricingPage() {
               <Button variant="ghost" size="sm" className="gap-2" asChild>
                 <Link href="/">
                   <ArrowLeft className="h-4 w-4" />
-                  返回首页
+                  {copy.backHome}
                 </Link>
               </Button>
             </div>
 
             <div className="text-center space-y-3">
-              <h1 className="text-3xl md:text-4xl font-semibold">充值获取积分</h1>
-              <p className="text-muted-foreground text-base md:text-lg">
-                选择合适的充值包，通过 PayPal 完成支付后即可获得对应积分，按量包长期有效。
-              </p>
+              <h1 className="text-3xl md:text-4xl font-semibold">{copy.title}</h1>
+              <p className="text-muted-foreground text-base md:text-lg">{copy.subtitle}</p>
             </div>
 
             <div className="grid lg:grid-cols-[1.3fr_1fr] gap-8">
@@ -176,14 +261,14 @@ export default function PricingPage() {
                       </div>
                       <div className="mt-4 flex items-baseline gap-2">
                         <span className="text-3xl font-bold">${plan.price}</span>
-                        <span className="text-xs text-muted-foreground">USD</span>
+                        <span className="text-xs text-muted-foreground">{copy.usd}</span>
                       </div>
                       <div className="mt-3 text-sm font-medium text-primary">
-                        {totalCredits} 积分
+                        {totalCredits} {copy.creditsUnit}
                       </div>
                       {plan.bonus && (
                         <div className="mt-2 text-xs text-muted-foreground">
-                          包含 {plan.bonus} 积分赠送
+                          {copy.bonusLabel.replace("{bonus}", String(plan.bonus))}
                         </div>
                       )}
                     </button>
@@ -194,44 +279,40 @@ export default function PricingPage() {
               <div className="space-y-4">
                 <Card className="border-border">
                   <CardHeader>
-                    <CardTitle>订单概览</CardTitle>
+                    <CardTitle>{copy.orderTitle}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">充值包</span>
+                      <span className="text-muted-foreground">{copy.planLabel}</span>
                       <span className="font-medium">{selectedPlan.title}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">到账积分</span>
+                      <span className="text-muted-foreground">{copy.creditsLabel}</span>
                       <span className="font-medium">
                         {selectedPlan.credits + (selectedPlan.bonus ?? 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">应付金额</span>
+                      <span className="text-muted-foreground">{copy.amountLabel}</span>
                       <span className="font-semibold">
-                        ${selectedPlan.price.toFixed(2)} USD
+                        ${selectedPlan.price.toFixed(2)} {copy.usd}
                       </span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      单次生成扣 12 credits（含转录与生成）
-                    </div>
+                    <div className="text-xs text-muted-foreground">{copy.creditNote}</div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <CreditCard className="h-4 w-4" />
-                      支持 PayPal 余额或绑定卡支付
+                      {copy.paypalSupport}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-border">
                   <CardHeader>
-                    <CardTitle>PayPal 支付</CardTitle>
+                    <CardTitle>{copy.paypalTitle}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {!clientId && (
-                      <p className="text-sm text-destructive">
-                        未检测到 PayPal Client ID，请先配置环境变量。
-                      </p>
+                      <p className="text-sm text-destructive">{copy.paypalMissing}</p>
                     )}
                     <div ref={buttonContainerRef} />
                     {status !== "idle" && message && (
@@ -250,7 +331,7 @@ export default function PricingPage() {
                     )}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <ShieldCheck className="h-4 w-4" />
-                      支付由 PayPal 安全处理，本站不保存任何卡信息。
+                      {copy.paypalSecure}
                     </div>
                   </CardContent>
                 </Card>
