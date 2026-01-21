@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { openLoginDialog } from "@/lib/login-dialog"
 import { useI18n } from "@/components/i18n-provider"
 import { formatMessage } from "@/lib/i18n"
+import { getErrorMessage } from "@/lib/i18n-errors"
 
 interface CaptionSegment {
   start: number
@@ -28,7 +29,7 @@ interface CaptionsResponse {
   captions?: CaptionSegment[]
   transcriptLanguage?: string
   source?: string
-  error?: string
+  error?: { code?: string } | string
 }
 
 interface GenerationOutputs {
@@ -46,7 +47,7 @@ interface JobResponse {
   jobId?: string
   status?: string
   outputs?: GenerationOutputs
-  error?: string
+  error?: { code?: string } | string
 }
 
 function formatTime(seconds: number): string {
@@ -168,7 +169,7 @@ export function HeroSection({
       const data: CaptionsResponse = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch captions")
+        throw new Error(getErrorMessage(data?.error, locale))
       }
 
       if (data.captions && data.videoId) {
@@ -193,7 +194,7 @@ export function HeroSection({
       const jobData: JobResponse = await jobResponse.json()
 
       if (!jobResponse.ok) {
-        throw new Error(jobData.error || "Failed to create job")
+        throw new Error(getErrorMessage(jobData?.error, locale))
       }
 
       if (jobData.outputs && onGenerated) {

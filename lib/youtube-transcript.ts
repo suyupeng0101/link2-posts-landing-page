@@ -1,5 +1,6 @@
 import type { CaptionSegment } from "@/lib/youtube-captions"
 import { fetchRapidApiCaptions } from "@/lib/rapidapi-transcript"
+import { ApiError } from "@/lib/api-error"
 
 export type TranscriptProvider = "rapidapi"
 
@@ -16,27 +17,18 @@ export type TranscriptResult = {
   source: TranscriptProvider
 }
 
-export class TranscriptError extends Error {
-  status: number
-
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-  }
-}
-
 export async function fetchYoutubeTranscript({
   youtubeUrl,
   transcriptLanguage = "auto",
   provider = "rapidapi",
 }: TranscriptRequest): Promise<TranscriptResult> {
   if (!youtubeUrl) {
-    throw new TranscriptError("YouTube URL is required", 400)
+    throw new ApiError("invalid_input", 400, "YouTube URL is required")
   }
 
   const videoId = extractVideoId(youtubeUrl)
   if (!videoId) {
-    throw new TranscriptError("Invalid YouTube URL", 400)
+    throw new ApiError("invalid_youtube_url", 400, "Invalid YouTube URL")
   }
 
   let captions: CaptionSegment[] = []
@@ -46,11 +38,11 @@ export async function fetchYoutubeTranscript({
       captions = await fetchRapidApiCaptions(videoId)
       break
     default:
-      throw new TranscriptError("Unsupported transcript provider", 400)
+      throw new ApiError("invalid_input", 400, "Unsupported transcript provider")
   }
 
   if (!captions.length) {
-    throw new TranscriptError("No transcript found via RapidAPI.", 404)
+    throw new ApiError("captions_not_found", 404, "No transcript found")
   }
 
   return {

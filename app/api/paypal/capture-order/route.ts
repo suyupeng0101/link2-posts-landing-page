@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getPayPalAccessToken, getPayPalApiBase } from "@/lib/paypal"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
+import { ApiError, apiErrorResponse } from "@/lib/api-error"
 
 type CaptureOrderPayload = {
   orderId: string
@@ -19,19 +20,19 @@ export async function POST(request: Request) {
     const body = (await request.json()) as CaptureOrderPayload
 
     if (!body.orderId) {
-      return NextResponse.json({ error: "Missing orderId" }, { status: 400 })
+      return apiErrorResponse(new ApiError("paypal_missing_order", 400))
     }
 
     const plan = body.planId ? plans[body.planId as keyof typeof plans] : null
     if (!plan) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
+      return apiErrorResponse(new ApiError("paypal_invalid_plan", 400))
     }
 
     const supabase = await createClient()
     const { data: authData, error: authError } = await supabase.auth.getUser()
 
     if (authError || !authData.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return apiErrorResponse(new ApiError("paypal_unauthorized", 401))
     }
 
     const { data: existingPayment } = await supabaseAdmin
@@ -60,9 +61,11 @@ export async function POST(request: Request) {
     const data = await response.json()
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: data?.message || "PayPal capture failed", details: data },
-        { status: response.status }
+      console.error("paypal capture error", data)
+      return apiErrorResponse(
+        new ApiError("paypal_capture_failed", response.status),
+        "paypal_capture_failed",
+        response.status
       )
     }
 
@@ -78,10 +81,7 @@ export async function POST(request: Request) {
       captureAmount.currency_code !== plan.currency ||
       Number.parseFloat(captureAmount.value) !== plan.amount
     ) {
-      return NextResponse.json(
-        { error: "Payment amount mismatch", details: data },
-        { status: 400 }
-      )
+      return apiErrorResponse(new ApiError("paypal_amount_mismatch", 400))
     }
 
     const creditsGranted = plan.credits + plan.bonus
@@ -106,10 +106,7 @@ export async function POST(request: Request) {
 
     if (paymentError) {
       console.error("paypal capture payment error", paymentError)
-      return NextResponse.json(
-        { error: "Failed to record payment" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("paypal_record_failed", 500))
     }
 
     const paymentId = paymentRows?.[0]?.id ?? null
@@ -121,10 +118,7 @@ export async function POST(request: Request) {
       .maybeSingle()
 
     if (balanceError) {
-      return NextResponse.json(
-        { error: "Failed to read balance" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("paypal_balance_read_failed", 500))
     }
 
     const newBalance = (balanceRow?.balance ?? 0) + creditsGranted
@@ -138,10 +132,7 @@ export async function POST(request: Request) {
       })
 
     if (balanceUpdateError) {
-      return NextResponse.json(
-        { error: "Failed to update balance" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("paypal_balance_update_failed", 500))
     }
 
     const { error: ledgerError } = await supabaseAdmin
@@ -155,10 +146,7 @@ export async function POST(request: Request) {
       })
 
     if (ledgerError) {
-      return NextResponse.json(
-        { error: "Failed to record ledger" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("paypal_ledger_failed", 500))
     }
 
     return NextResponse.json({
@@ -167,9 +155,7 @@ export async function POST(request: Request) {
       balance: newBalance,
     })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Capture order failed" },
-      { status: 500 }
-    )
+    console.error("paypal capture error", error)
+    return apiErrorResponse(error, "paypal_capture_failed", 500)
   }
 }

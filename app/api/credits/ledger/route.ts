@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { ApiError, apiErrorResponse } from "@/lib/api-error"
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: authData, error: authError } = await supabase.auth.getUser()
 
   if (authError || !authData.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return apiErrorResponse(new ApiError("unauthorized", 401))
   }
 
   const { searchParams } = new URL(request.url)
@@ -24,10 +25,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error("credits ledger error", error)
-    return NextResponse.json(
-      { error: "Failed to fetch ledger" },
-      { status: 500 }
-    )
+    return apiErrorResponse(new ApiError("credits_ledger_failed", 500))
   }
 
   return NextResponse.json({ items: data ?? [] })

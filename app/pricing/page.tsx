@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/components/i18n-provider"
+import { getErrorMessage } from "@/lib/i18n-errors"
 
 type RechargePlan = {
   id: string
@@ -175,7 +176,7 @@ export default function PricingPage() {
         })
         const data = await response.json()
         if (!response.ok) {
-          throw new Error(data?.error || copy.paypalCreateError)
+          throw new Error(getErrorMessage(data?.error, locale))
         }
         return data.id
       },
@@ -193,7 +194,7 @@ export default function PricingPage() {
         })
         const capture = await response.json()
         if (!response.ok) {
-          throw new Error(capture?.error || copy.paypalConfirmError)
+          throw new Error(getErrorMessage(capture?.error, locale))
         }
         setStatus("success")
         setMessage(

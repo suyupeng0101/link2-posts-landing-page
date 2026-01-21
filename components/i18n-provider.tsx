@@ -19,11 +19,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const saved = window.localStorage.getItem(STORAGE_KEY)
     if (saved && isSupportedLocale(saved)) {
       setLocaleState(saved)
-      return
-    }
-    const browserLocale = navigator.language?.toLowerCase() || ""
-    if (browserLocale.startsWith("zh")) {
-      setLocaleState("zh-Hans")
     }
   }, [])
 

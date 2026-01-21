@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
+import { ApiError, apiErrorResponse } from "@/lib/api-error"
 
 type Params = {
   params: Promise<{
@@ -13,13 +14,13 @@ export async function GET(request: NextRequest, { params }: Params) {
   const { data: authData, error: authError } = await supabase.auth.getUser()
 
   if (authError || !authData.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return apiErrorResponse(new ApiError("unauthorized", 401))
   }
 
   const { id } = await params
   const jobId = Number.parseInt(id, 10)
   if (!Number.isFinite(jobId)) {
-    return NextResponse.json({ error: "Invalid job id" }, { status: 400 })
+    return apiErrorResponse(new ApiError("job_invalid_id", 400))
   }
 
   const { data: job, error: jobError } = await supabaseAdmin
@@ -30,14 +31,11 @@ export async function GET(request: NextRequest, { params }: Params) {
     .maybeSingle()
 
   if (jobError) {
-    return NextResponse.json(
-      { error: "Failed to fetch job" },
-      { status: 500 }
-    )
+    return apiErrorResponse(new ApiError("job_fetch_failed", 500))
   }
 
   if (!job) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 })
+    return apiErrorResponse(new ApiError("job_not_found", 404))
   }
 
   const { data: items, error: itemsError } = await supabaseAdmin
@@ -47,10 +45,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     .order("id", { ascending: true })
 
   if (itemsError) {
-    return NextResponse.json(
-      { error: "Failed to fetch job items" },
-      { status: 500 }
-    )
+    return apiErrorResponse(new ApiError("job_items_fetch_failed", 500))
   }
 
   return NextResponse.json({ job, items: items ?? [] })

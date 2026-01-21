@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getPayPalAccessToken, getPayPalApiBase } from "@/lib/paypal"
+import { ApiError, apiErrorResponse } from "@/lib/api-error"
 
 type CreateOrderPayload = {
   planId?: string
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     const plan = body.planId ? plans[body.planId as keyof typeof plans] : null
 
     if (!plan) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
+      return apiErrorResponse(new ApiError("paypal_invalid_plan", 400))
     }
 
     const amountValue = plan.amount
@@ -52,17 +53,17 @@ export async function POST(request: Request) {
     const data = await response.json()
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: data?.message || "PayPal order create failed", details: data },
-        { status: response.status }
+      console.error("paypal create order error", data)
+      return apiErrorResponse(
+        new ApiError("paypal_create_failed", response.status),
+        "paypal_create_failed",
+        response.status
       )
     }
 
     return NextResponse.json({ id: data.id })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Create order failed" },
-      { status: 500 }
-    )
+    console.error("paypal create order error", error)
+    return apiErrorResponse(error, "paypal_create_failed", 500)
   }
 }

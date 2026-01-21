@@ -4,6 +4,7 @@ import type { CaptionSegment } from "@/lib/youtube-captions"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { extractVideoId } from "@/lib/youtube-transcript"
+import { ApiError, apiErrorResponse, parseApiErrorCode } from "@/lib/api-error"
 
 const CREDITS_PER_GENERATION = 12
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     const { data: authData, error: authError } = await supabase.auth.getUser()
 
     if (authError || !authData.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return apiErrorResponse(new ApiError("unauthorized", 401))
     }
 
     const {
@@ -33,18 +34,12 @@ export async function POST(request: NextRequest) {
     } = await request.json()
 
     if (!youtubeUrl) {
-      return NextResponse.json(
-        { error: "YouTube URL is required" },
-        { status: 400 }
-      )
+      return apiErrorResponse(new ApiError("invalid_input", 400))
     }
 
     const videoId = providedVideoId || extractVideoId(youtubeUrl)
     if (!videoId) {
-      return NextResponse.json(
-        { error: "Invalid YouTube URL" },
-        { status: 400 }
-      )
+      return apiErrorResponse(new ApiError("invalid_youtube_url", 400))
     }
 
     const { data: creditRow, error: creditError } = await supabaseAdmin
@@ -54,18 +49,12 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (creditError) {
-      return NextResponse.json(
-        { error: "Failed to check credits" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("credits_check_failed", 500))
     }
 
     const currentBalance = creditRow?.balance ?? 0
     if (currentBalance < CREDITS_PER_GENERATION) {
-      return NextResponse.json(
-        { error: "积分不足，请先充值积分" },
-        { status: 402 }
-      )
+      return apiErrorResponse(new ApiError("credits_insufficient", 402))
     }
 
     const { data: jobRow, error: jobError } = await supabaseAdmin
@@ -88,10 +77,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (jobError) {
-      return NextResponse.json(
-        { error: "Failed to create job" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("job_create_failed", 500))
     }
 
     jobId = jobRow.id
@@ -111,10 +97,7 @@ export async function POST(request: NextRequest) {
         .from("generation_jobs")
         .update({ status: "failed" })
         .eq("id", jobId)
-      return NextResponse.json(
-        { error: "Failed to update credits" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("credits_update_failed", 500))
     }
 
     const { error: ledgerError } = await supabaseAdmin
@@ -132,10 +115,7 @@ export async function POST(request: NextRequest) {
         .from("generation_jobs")
         .update({ status: "failed" })
         .eq("id", jobId)
-      return NextResponse.json(
-        { error: "Failed to record credits" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("credits_record_failed", 500))
     }
 
     const captions = await resolveCaptions({
@@ -146,28 +126,35 @@ export async function POST(request: NextRequest) {
     })
 
     if (!captions.length) {
-      return NextResponse.json(
-        { error: "No captions found for this video. This video may not have captions available." },
-        { status: 404 }
-      )
+      return apiErrorResponse(new ApiError("captions_not_found", 404))
     }
 
     const fullText = captions.map((segment) => segment.text).join(" ")
 
-    const outputs = await generateOutputsWithModel({
-      videoId,
-      youtubeUrl,
-      transcriptLanguage,
-      outputLanguage,
-      tone,
-      audience,
-      threadCount,
-      singlesCount,
-      titleCandidates,
-      cta,
-      captions,
-      fullText
-    })
+    let outputs
+    try {
+      outputs = await generateOutputsWithModel({
+        videoId,
+        youtubeUrl,
+        transcriptLanguage,
+        outputLanguage,
+        tone,
+        audience,
+        threadCount,
+        singlesCount,
+        titleCandidates,
+        cta,
+        captions,
+        fullText
+      })
+    } catch (error) {
+      if (error instanceof ApiError && error.logMessage) {
+        console.error("Generation error:", error.logMessage)
+      } else {
+        console.error("Generation error:", error)
+      }
+      throw new ApiError("generation_failed", 500)
+    }
 
     const itemsToInsert = [
       ...outputs.x_thread.map((item) => ({
@@ -196,10 +183,7 @@ export async function POST(request: NextRequest) {
         .from("generation_jobs")
         .update({ status: "failed" })
         .eq("id", jobId)
-      return NextResponse.json(
-        { error: "Failed to save outputs" },
-        { status: 500 }
-      )
+      return apiErrorResponse(new ApiError("job_outputs_failed", 500))
     }
 
     await supabaseAdmin
@@ -213,17 +197,18 @@ export async function POST(request: NextRequest) {
       outputs
     })
   } catch (error) {
-    console.error("Error creating job:", error)
+    if (error instanceof ApiError && error.logMessage) {
+      console.error("Error creating job:", error.logMessage)
+    } else {
+      console.error("Error creating job:", error)
+    }
     if (jobId) {
       await supabaseAdmin
         .from("generation_jobs")
         .update({ status: "failed" })
         .eq("id", jobId)
     }
-    return NextResponse.json(
-      { error: "Failed to create job" },
-      { status: 500 }
-    )
+    return apiErrorResponse(error, "job_create_failed", 500)
   }
 }
 
@@ -260,7 +245,11 @@ async function resolveCaptions({
 
   const data = await response.json()
   if (!response.ok) {
-    throw new Error(data?.error || "Failed to fetch captions")
+    const code = parseApiErrorCode(data?.error)
+    if (code) {
+      throw new ApiError(code, response.status)
+    }
+    throw new ApiError("captions_fetch_failed", response.status)
   }
 
   return Array.isArray(data?.captions) ? data.captions : []

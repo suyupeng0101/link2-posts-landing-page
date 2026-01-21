@@ -1,4 +1,5 @@
 import type { CaptionSegment } from "@/lib/youtube-captions"
+import { ApiError } from "@/lib/api-error"
 
 type RapidApiSegment = {
   text?: unknown
@@ -22,7 +23,11 @@ export async function fetchRapidApiCaptions(
   const apiKey = process.env.RAPIDAPI_KEY
 
   if (!apiKey) {
-    throw new Error("Missing RAPIDAPI_KEY for RapidAPI transcript requests")
+    throw new ApiError(
+      "transcript_missing_key",
+      500,
+      "Missing RAPIDAPI_KEY for RapidAPI transcript requests"
+    )
   }
 
   const url = `https://${host}/transcript?video_id=${encodeURIComponent(videoId)}`
@@ -37,9 +42,11 @@ export async function fetchRapidApiCaptions(
   if (!response.ok) {
     const detail = await readResponseText(response)
     const suffix = detail ? `: ${detail}` : ""
-    throw new Error(
-      `RapidAPI transcript request failed (${response.status})${suffix}`
-    )
+    const logMessage = `RapidAPI transcript request failed (${response.status})${suffix}`
+    if (response.status === 429) {
+      throw new ApiError("transcript_quota", 429, logMessage, logMessage)
+    }
+    throw new ApiError("transcript_failed", response.status, logMessage, logMessage)
   }
 
   const payload = await response.json()

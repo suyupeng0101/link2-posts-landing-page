@@ -288,3 +288,24 @@ on public.credit_plans
 for select
 to anon, authenticated
 using (true);
+
+
+-- Grant privileges to authenticated role
+grant usage on schema public to authenticated;
+
+grant select on table
+  public.credits_balance,
+  public.credits_ledger,
+  public.generation_jobs,
+  public.generation_job_items,
+  public.user_profiles,
+  public.payments,
+  public.product_settings,
+  public.credit_plans
+to authenticated;
+
+-- 如果你允许未登录读取公开配置
+grant select on table
+  public.product_settings,
+  public.credit_plans
+to anon;

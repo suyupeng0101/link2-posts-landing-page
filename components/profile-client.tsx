@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Check, Copy, Download } from "lucide-react"
 import { useI18n } from "@/components/i18n-provider"
+import { getErrorMessage } from "@/lib/i18n-errors"
 
 type LedgerItem = {
   id: number
@@ -207,9 +208,15 @@ export default function ProfileClient() {
       const ledgerData = await ledgerRes.json()
       const jobsData = await jobsRes.json()
 
-      if (!balanceRes.ok) throw new Error(balanceData?.error || copy.errorBalance)
-      if (!ledgerRes.ok) throw new Error(ledgerData?.error || copy.errorLedger)
-      if (!jobsRes.ok) throw new Error(jobsData?.error || copy.errorJobs)
+      if (!balanceRes.ok) {
+        throw new Error(getErrorMessage(balanceData?.error, locale))
+      }
+      if (!ledgerRes.ok) {
+        throw new Error(getErrorMessage(ledgerData?.error, locale))
+      }
+      if (!jobsRes.ok) {
+        throw new Error(getErrorMessage(jobsData?.error, locale))
+      }
 
       setBalance(balanceData.balance ?? 0)
       setLedger(Array.isArray(ledgerData.items) ? ledgerData.items : [])
@@ -219,7 +226,7 @@ export default function ProfileClient() {
     } finally {
       setLoading(false)
     }
-  }, [copy.errorBalance, copy.errorJobs, copy.errorLedger, copy.errorLoad])
+  }, [copy.errorBalance, copy.errorJobs, copy.errorLedger, copy.errorLoad, locale])
 
   useEffect(() => {
     fetchAll()
@@ -235,7 +242,7 @@ export default function ProfileClient() {
         })
         const data = await response.json()
         if (!response.ok) {
-          throw new Error(data?.error || copy.errorAssets)
+          throw new Error(getErrorMessage(data?.error, locale))
         }
         setSelectedJob(data as JobDetail)
       } catch (err) {
@@ -244,7 +251,7 @@ export default function ProfileClient() {
         setLoading(false)
       }
     },
-    [copy.errorAssets]
+    [copy.errorAssets, locale]
   )
 
   const handleCopy = useCallback(
