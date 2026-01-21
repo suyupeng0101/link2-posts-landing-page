@@ -143,6 +143,7 @@ export default function PricingPage() {
   const [sdkReady, setSdkReady] = useState(false)
   const buttonContainerRef = useRef<HTMLDivElement | null>(null)
   const selectedPlanRef = useRef<RechargePlan>(plans[0])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.id === selectedId) ?? plans[0],
@@ -153,6 +154,7 @@ export default function PricingPage() {
     selectedPlanRef.current = selectedPlan
     setStatus("idle")
     setMessage(null)
+    setIsSubmitting(false)
   }, [selectedPlan])
 
   useEffect(() => {
@@ -184,6 +186,7 @@ export default function PricingPage() {
         if (!data.orderID) return
         const plan = selectedPlanRef.current
         setStatus("processing")
+        setIsSubmitting(true)
         setMessage(copy.paypalProcessing)
         const response = await fetch("/api/paypal/capture-order", {
           method: "POST",
@@ -197,6 +200,7 @@ export default function PricingPage() {
           throw new Error(getErrorMessage(capture?.error, locale))
         }
         setStatus("success")
+        setIsSubmitting(false)
         setMessage(
           copy.paypalSuccess.replace(
             "{credits}",
@@ -207,6 +211,7 @@ export default function PricingPage() {
       onError: (err: unknown) => {
         const errorMessage = err instanceof Error ? err.message : copy.paypalError
         setStatus("error")
+        setIsSubmitting(false)
         setMessage(errorMessage)
       },
     })
@@ -247,9 +252,12 @@ export default function PricingPage() {
                     <button
                       key={plan.id}
                       type="button"
-                      onClick={() => setSelectedId(plan.id)}
+                      onClick={() => {
+                        if (!isSubmitting) setSelectedId(plan.id)
+                      }}
+                      disabled={isSubmitting}
                       className={cn(
-                        "text-left rounded-2xl border border-border bg-card p-6 transition hover:border-primary/60",
+                        "text-left rounded-2xl border border-border bg-card p-6 transition hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-60",
                         isSelected && "border-primary ring-1 ring-primary/40"
                       )}
                     >
@@ -315,7 +323,12 @@ export default function PricingPage() {
                     {!clientId && (
                       <p className="text-sm text-destructive">{copy.paypalMissing}</p>
                     )}
-                    <div ref={buttonContainerRef} />
+                    <div className="relative">
+                      <div ref={buttonContainerRef} />
+                      {isSubmitting && (
+                        <div className="absolute inset-0 rounded-md bg-background/70 backdrop-blur-sm" />
+                      )}
+                    </div>
                     {status !== "idle" && message && (
                       <div
                         className={cn(

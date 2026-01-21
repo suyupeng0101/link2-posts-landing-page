@@ -67,6 +67,7 @@ export function HeroSection({
   const [transcriptLanguage] = useState("auto")
   const [outputLanguage, setOutputLanguage] = useState("en")
   const [isLoading, setIsLoading] = useState(false)
+  const [isRouting, setIsRouting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [captions, setCaptions] = useState<CaptionSegment[] | null>(null)
   const [videoId, setVideoId] = useState<string | null>(null)
@@ -138,7 +139,7 @@ export function HeroSection({
   }
 
   const handleGenerate = async () => {
-    if (!youtubeUrl) return
+    if (!youtubeUrl || isLoading) return
 
     const authed = await ensureAuthenticated()
     if (!authed) {
@@ -208,10 +209,13 @@ export function HeroSection({
   }
 
   const handleRechargeClick = async () => {
+    if (isRouting) return
+    setIsRouting(true)
     const authed = await ensureAuthenticated()
     if (!authed) {
       setShowLoginPrompt(true)
       openLoginDialog()
+      setIsRouting(false)
       return
     }
     setShowLoginPrompt(false)
@@ -374,6 +378,7 @@ export function HeroSection({
                 variant="secondary"
                 className="flex-1 h-12 text-base bg-emerald-600 text-white hover:bg-emerald-500"
                 onClick={handleRechargeClick}
+                disabled={isRouting}
               >
                 {copy.recharge}
               </Button>

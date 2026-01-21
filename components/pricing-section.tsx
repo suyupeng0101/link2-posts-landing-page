@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -126,6 +126,8 @@ export function PricingSection() {
           ],
         }
 
+  const [isRouting, setIsRouting] = useState(false)
+
   const ensureAuthenticated = useCallback(async () => {
     try {
       const authResponse = await fetch("/api/auth/user", { cache: "no-store" })
@@ -142,13 +144,16 @@ export function PricingSection() {
   }, [])
 
   const handleRechargeClick = useCallback(async () => {
+    if (isRouting) return
+    setIsRouting(true)
     const authed = await ensureAuthenticated()
     if (!authed) {
       openLoginDialog()
+      setIsRouting(false)
       return
     }
     router.push("/pricing")
-  }, [ensureAuthenticated, router])
+  }, [ensureAuthenticated, isRouting, router])
 
   const plans = copy.plans
 
@@ -187,6 +192,7 @@ export function PricingSection() {
                     className="w-full"
                     variant={plan.popular ? "default" : "outline"}
                     onClick={handleRechargeClick}
+                    disabled={isRouting}
                   >
                     {plan.cta}
                   </Button>
