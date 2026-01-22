@@ -13,7 +13,7 @@ type RapidApiSegment = {
   endTime?: unknown
 }
 
-const DEFAULT_RAPIDAPI_HOST = "youtube-transcriptor.p.rapidapi.com"
+const DEFAULT_RAPIDAPI_HOST = "youtube-transcript3.p.rapidapi.com"
 
 export async function fetchRapidApiCaptions(
   videoId: string
@@ -30,7 +30,9 @@ export async function fetchRapidApiCaptions(
     )
   }
 
-  const url = `https://${host}/transcript?video_id=${encodeURIComponent(videoId)}`
+  const url = `https://${host}/api/transcript?videoId=${encodeURIComponent(
+    videoId
+  )}`
 
   const response = await fetch(url, {
     headers: {
