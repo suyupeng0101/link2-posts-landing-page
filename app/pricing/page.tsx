@@ -135,8 +135,8 @@ export default function PricingPage() {
   )
 
   const plans: RechargePlan[] = copy.plans
-
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
+
   const [selectedId, setSelectedId] = useState(plans[1]?.id ?? plans[0].id)
   const [status, setStatus] = useState<PayPalStatus>("idle")
   const [message, setMessage] = useState<string | null>(null)
@@ -221,7 +221,7 @@ export default function PricingPage() {
     return () => {
       buttons.close?.()
     }
-  }, [sdkReady, clientId, copy])
+  }, [sdkReady, clientId, copy, locale])
 
   return (
     <div className="min-h-screen">

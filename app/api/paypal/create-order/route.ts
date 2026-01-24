@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       return apiErrorResponse(new ApiError("paypal_invalid_plan", 400))
     }
 
+    const origin = new URL(request.url).origin
     const amountValue = plan.amount
     const creditsGranted = plan.credits + plan.bonus
 
@@ -39,13 +40,15 @@ export async function POST(request: Request) {
               currency_code: plan.currency,
               value: amountValue.toFixed(2),
             },
-            description: `充值 ${creditsGranted} 积分`,
+            description: `Top up ${creditsGranted} credits`,
             custom_id: body.planId,
           },
         ],
         application_context: {
           shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
+          return_url: `${origin}/pricing?paypal=success&planId=${body.planId}`,
+          cancel_url: `${origin}/pricing?paypal=cancel&planId=${body.planId}`,
         },
       }),
     })
@@ -61,7 +64,20 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({ id: data.id })
+    const approvalUrl =
+      data?.links?.find((link: { rel?: string; href?: string }) =>
+        ["approve", "payer-action"].includes(link.rel ?? "")
+      )?.href ?? null
+
+    if (!approvalUrl) {
+      return apiErrorResponse(
+        new ApiError("paypal_missing_approval_url", 500),
+        "paypal_create_failed",
+        500
+      )
+    }
+
+    return NextResponse.json({ id: data.id, approvalUrl })
   } catch (error) {
     console.error("paypal create order error", error)
     return apiErrorResponse(error, "paypal_create_failed", 500)

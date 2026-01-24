@@ -1,3 +1,5 @@
+import "server-only"
+
 const paypalApiBase =
   process.env.PAYPAL_MODE === "live"
     ? "https://api-m.paypal.com"

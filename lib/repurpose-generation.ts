@@ -1,3 +1,5 @@
+import "server-only"
+
 import type { CaptionSegment } from "@/lib/youtube-captions"
 
 type SourceSegment = { start: number; end: number }
