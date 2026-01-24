@@ -8,14 +8,57 @@ import "./globals.css"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
+const siteUrl = "https://link2posts.online"
+const defaultTitle = "Link2Posts"
+const defaultDescription =
+  "Turn YouTube links into ready-to-post X threads, single posts, and YouTube SEO assets in minutes."
+
 export const metadata: Metadata = {
-  title: "Link2Posts - YouTube 链接转内容资产",
-  description:
-    "把 YouTube 链接一键生成 X Thread、单条推文与 YouTube SEO 元数据。",
-  generator: "v0.app",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: defaultTitle,
+    template: "%s | Link2Posts",
+  },
+  description: defaultDescription,
+  applicationName: "Link2Posts",
+  generator: "Link2Posts",
+  keywords: [
+    "YouTube",
+    "X thread",
+    "Twitter thread",
+    "social content",
+    "YouTube SEO",
+    "content repurposing",
+  ],
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    title: defaultTitle,
+    description: defaultDescription,
+    siteName: "Link2Posts",
+    images: [{ url: "/logo.png" }],
+  },
+  twitter: {
+    card: "summary",
+    title: defaultTitle,
+    description: defaultDescription,
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: "/logo.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-dark-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-light-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
   },
 }
 
@@ -26,7 +69,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <I18nProvider>{children}</I18nProvider>
         <Analytics />
       </body>
