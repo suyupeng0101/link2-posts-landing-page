@@ -158,6 +158,14 @@ export default function PricingPage() {
   }, [selectedPlan])
 
   useEffect(() => {
+    if (!clientId) return
+    const paypal = (window as Window & { paypal?: any }).paypal
+    if (paypal?.Buttons) {
+      setSdkReady(true)
+    }
+  }, [clientId])
+
+  useEffect(() => {
     if (!sdkReady || !clientId || !buttonContainerRef.current) return
     const paypal = (window as Window & { paypal?: any }).paypal
     if (!paypal?.Buttons) return
