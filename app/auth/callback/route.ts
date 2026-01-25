@@ -1,16 +1,38 @@
-import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 
 const SIGNUP_BONUS_CREDITS = 12
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const origin = request.nextUrl.origin
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/"
 
   if (code) {
-    const supabase = await createClient()
+    const supabaseUrl =
+      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey =
+      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return NextResponse.redirect(`${origin}/?auth=error&message=auth_callback`)
+    }
+
+    const response = NextResponse.redirect(`${origin}${next}`)
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    })
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
@@ -66,7 +88,7 @@ export async function GET(request: Request) {
         }
       }
 
-      return NextResponse.redirect(`${origin}${next}`)
+      return response
     }
   }
 
