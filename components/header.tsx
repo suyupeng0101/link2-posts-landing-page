@@ -51,7 +51,7 @@ export function Header() {
           signedIn: "Signed-in user",
           navFeatures: "Features",
           navFaq: "FAQ",
-          login: "Log in",
+          login: "Sign in",
           profile: "Profile",
           signOut: "Sign out",
           cta: "Get started",

@@ -1,3 +1,11 @@
+/*
+ * @Description: 
+ * @Version: 1.0
+ * @Autor: pawn
+ * @Date: 2026-01-13 15:57:25
+ * @LastEditors: pawn
+ * @LastEditTime: 2026-01-25 20:47:10
+ */
 "use client"
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -46,7 +54,7 @@ export function FaqSection() {
               answer: "Only YouTube URLs are supported. Local uploads or X links are not supported yet.",
             },
             {
-              question: "Do I need to log in before generating?",
+              question: "Do I need to Sign in before generating?",
               answer: "Yes. You must sign in with email first (currently Google email only).",
             },
             {

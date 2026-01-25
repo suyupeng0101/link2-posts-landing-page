@@ -4,7 +4,7 @@
  * @Autor: pawn
  * @Date: 2026-01-15 14:20:39
  * @LastEditors: pawn
- * @LastEditTime: 2026-01-15 15:11:34
+ * @LastEditTime: 2026-01-25 20:47:03
  */
 "use client"
 
@@ -39,7 +39,7 @@ export function LoginDialog({ trigger }: LoginDialogProps) {
           legal: "登录即表示你同意服务条款与隐私政策",
         }
       : {
-          title: "Log in",
+          title: "Sign in",
           description: "Choose an account to get started",
           continueWith: "Continue with Google",
           provider: "Google",
